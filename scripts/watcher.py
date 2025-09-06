@@ -99,11 +99,19 @@ def main():
 
     # Upload today's data on startup if API is configured
     if api_url:
-        today = datetime.now().strftime("%Y-%m-%d")
-        today_abs = pattern_counts["absolutely"].get(today, 0)
-        today_right = pattern_counts["right"].get(today, 0)
-        print(f"Uploading today's counts: absolutely={today_abs}, right={today_right}")
-        if upload_to_api(api_url, api_secret, today, today_abs, today_right):
+        today_utc = get_utc_today()
+        today_local = datetime.now().strftime("%Y-%m-%d")
+        today_abs = pattern_counts["absolutely"].get(today_utc, 0)
+        today_right = pattern_counts["right"].get(today_utc, 0)
+
+        timezone_note = ""
+        if today_utc != today_local:
+            timezone_note = f" (UTC {today_utc}, local {today_local})"
+
+        print(
+            f"Uploading today's counts{timezone_note}: absolutely={today_abs}, right={today_right}"
+        )
+        if upload_to_api(api_url, api_secret, today_utc, today_abs, today_right):
             print("  ✓ Upload successful")
         else:
             print("  ✗ Upload failed")
@@ -171,11 +179,11 @@ def main():
 
                 # Upload to API if configured (only absolutely and right)
                 if api_url:
-                    today = datetime.now().strftime("%Y-%m-%d")
-                    today_abs = pattern_counts["absolutely"].get(today, 0)
-                    today_right = pattern_counts["right"].get(today, 0)
+                    today_utc = get_utc_today()
+                    today_abs = pattern_counts["absolutely"].get(today_utc, 0)
+                    today_right = pattern_counts["right"].get(today_utc, 0)
                     if upload_to_api(
-                        api_url, api_secret, today, today_abs, today_right
+                        api_url, api_secret, today_utc, today_abs, today_right
                     ):
                         print(
                             f"  ✓ Uploaded to API: absolutely={today_abs}, right={today_right}"

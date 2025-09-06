@@ -3,7 +3,7 @@ import os
 import json
 import re
 import urllib.request
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from collections import defaultdict
 
@@ -98,7 +98,7 @@ def scan_jsonl_file(filepath, processed_ids, project_name, compiled_patterns):
                                     date_str = entry_time.strftime("%Y-%m-%d")
                                 else:
                                     time_str = "unknown"
-                                    date_str = datetime.now().strftime("%Y-%m-%d")
+                                    date_str = get_utc_today()
 
                                 matches = {}
                                 for (
@@ -140,6 +140,11 @@ def get_project_display_name(project_dir_name):
                 name = parts[3]
             break
     return name
+
+
+def get_utc_today():
+    """Get today's date in UTC (same format as JSONL timestamps)"""
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 
 def ensure_data_dir():
