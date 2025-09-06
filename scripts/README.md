@@ -1,61 +1,50 @@
-# Claude "Absolutely Right" Counter Scripts
+# Claude "Absolutely Right" Counter Script
 
-Scripts to track how often Claude Code says you're right.
+Track patterns like "You're absolutely right!" in Claude Code conversations. 
 
-## Quick Start
-
-### 1. Backfill Historical Data
-Scan all existing Claude conversations and upload to your API:
+## Usage
 
 ```bash
-python3 backfill.py --upload http://localhost:3003
-# Or with authentication:
-python3 backfill.py --upload https://absolutelyright.lol YOUR_SECRET
+# Backfill historical data
+python3 backfill.py --upload http://localhost:3003 [SECRET]
+
+# Real-time monitoring (will backfill all of today's data)
+python3 watcher.py --upload http://localhost:3003 [SECRET]
 ```
 
-### 2. Real-time Monitoring
-Watch for new "you're right" messages as they happen:
+Backfill asks for confirmation before bulk uploads.
+
+## Patterns
+
+Defined in `claude_counter.py`:
+- **absolutely**: `You(?:'re| are) absolutely right`
+- **right**: `You(?:'re| are) right`
+
+Add patterns by editing the `PATTERNS` dict:
+```python
+PATTERNS = {
+    "absolutely": r"You(?:'re| are) absolutely right",
+    "right": r"You(?:'re| are) right",
+    "perfect": r"Perfect!"  # New pattern
+}
+```
+
+## Environment
 
 ```bash
-python3 watcher.py --upload http://localhost:3003
-# Or with authentication:
-python3 watcher.py --upload https://absolutelyright.lol YOUR_SECRET
+export CLAUDE_PROJECTS=/path/to/projects  # Default: ~/.claude/projects
 ```
 
-## What Gets Counted
+## Data Files
 
-Both scripts track two metrics:
-- **Absolutely right**: "You're absolutely right" or "You are absolutely right"
-- **Just right**: Any "You're right" or "You are right" (includes "absolutely right")
+Stored in `~/.absolutelyright/`:
+- `daily_{pattern}_counts.json` - Per-pattern daily counts
+- `project_counts.json` - Project breakdown
+- `processed_ids.json` - Processed message IDs
 
-## Environment Variables
+## API
 
-Optional environment variables to customize behavior:
-
-```bash
-# Change Claude projects directory (default: ~/.claude/projects)
-export CLAUDE_PROJECTS=/path/to/claude/projects
-
-# Change patterns (regex)
-export PATTERN="You(?:'re| are) absolutely right"
-export PATTERN_RIGHT="You(?:'re| are) right"
-
-# Change check interval for watcher (seconds, default: 2)
-export CHECK_INTERVAL=5
-```
-
-## Data Storage
-
-Both scripts store data locally in `~/.absolutelyright/`:
-- `daily_counts.json` - Absolutely right counts by date
-- `daily_right_counts.json` - Total right counts by date  
-- `project_counts.json` - Counts by project
-- `processed_ids.json` - Already processed message IDs
-- `total_count.txt` - Running total
-
-## API Endpoints
-
-The scripts upload to `/api/set` with this payload:
+Uploads to `/api/set`:
 ```json
 {
   "day": "2024-01-15",
@@ -64,10 +53,3 @@ The scripts upload to `/api/set` with this payload:
   "secret": "optional_secret"
 }
 ```
-
-## Tips
-
-- Run `backfill.py` first to get all historical data
-- Keep `watcher.py` running to track new messages in real-time
-- The watcher uploads today's counts on startup and after each new match
-- Both scripts work without authentication if your API doesn't require it
