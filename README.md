@@ -4,8 +4,6 @@ A scientifically rigorous tracking system for how often Claude Code validates my
 
 This code powers the [https://absolutelyright.lol/](https://absolutelyright.lol/) website:
 
-**Note: The domain has been suspended, see [issue #6](https://github.com/yoavf/absolutelyright/issues/6). Until that's sorted, you can access it on https://absolutelyright.fly.dev/**
-
 <img width="1100" height="1200" alt="screenshot-rocks" src="https://github.com/user-attachments/assets/5464b87b-edb6-460c-b625-d06c33684d9a" />
 
 
