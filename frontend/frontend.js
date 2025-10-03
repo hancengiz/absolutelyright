@@ -1,3 +1,8 @@
+// Chart annotations configuration
+const CHART_ANNOTATIONS = [
+	{ date: '2025-09-29', label: 'Sonnet 4.5' }
+];
+
 async function fetchToday(animate = false) {
 	try {
 		const res = await fetch("/api/today");
@@ -85,6 +90,9 @@ function drawChart(history) {
 	const containerWidth = Math.min(window.innerWidth - 40, 760);
 	const width = containerWidth;
 	const height = isMobile ? 300 : 350;
+	const margin = isMobile
+		? { top: 20, right: 10, bottom: 60, left: 40 }
+		: { top: 30, right: 20, bottom: 70, left: 80 };
 
 	// Create container div for roughViz
 	const container = document.createElement('div');
@@ -129,12 +137,106 @@ function drawChart(history) {
 		yLabel: isMobile ? '' : 'Times Right',
 		interactive: true,
 		tooltipFontSize: '0.95rem',
-		margin: isMobile
-			? { top: 20, right: 10, bottom: 60, left: 40 }
-			: { top: 30, right: 20, bottom: 70, left: 80 },
+		margin: margin,
 		axisFontSize: isMobile ? '10' : '12',
 		axisStrokeWidth: isMobile ? 1 : 1.5,
 		strokeWidth: isMobile ? 1.5 : 2,
+	});
+
+	// Hide every other x-axis label to reduce crowding
+	setTimeout(() => {
+		const xAxisLabels = chartElement.querySelectorAll('.x-axis text, .xAxis text, svg text');
+		xAxisLabels.forEach((label, i) => {
+			if (i % 2 === 1) {
+				label.style.opacity = '0';
+			}
+		});
+
+		// Add chart annotations
+		addChartAnnotations(chartElement, displayHistory, isMobile, width, height, margin);
+	}, 100);
+}
+
+function addChartAnnotations(chartElement, displayHistory, isMobile, width, height, margin) {
+	const svg = chartElement.querySelector('svg');
+	if (!svg) return;
+
+	// Get actual SVG dimensions from viewBox
+	const viewBox = svg.getAttribute('viewBox');
+	const [, , vbWidth, vbHeight] = viewBox ? viewBox.trim().split(/\s+/).map(Number) : [0, 0, width, height];
+
+	const groups = svg.querySelectorAll('g');
+
+	// Find all rect elements (bars) and group by x position
+	const rects = Array.from(svg.querySelectorAll('rect'));
+
+	// Group rects by x coordinate (each bar may have multiple stacked rects)
+	const barGroups = new Map();
+	rects.forEach(rect => {
+		const x = parseFloat(rect.getAttribute('x'));
+		if (!barGroups.has(x)) {
+			barGroups.set(x, []);
+		}
+		barGroups.get(x).push(rect);
+	});
+
+	// Sort by x position to match display order
+	const sortedXPositions = Array.from(barGroups.keys()).sort((a, b) => a - b);
+
+	// Find the main chart group (has translate with margin values)
+	const chartGroup = Array.from(groups).find(g => {
+		const t = g.getAttribute('transform');
+		return t && t.includes(`translate(${margin.left}`) && t.includes(`${margin.top})`);
+	});
+
+	// Add each annotation
+	CHART_ANNOTATIONS.forEach(annotation => {
+		const releaseIndex = displayHistory.findIndex(d => d.day === annotation.date);
+		if (releaseIndex === -1) return;
+
+		let xPosition;
+		if (sortedXPositions[releaseIndex] !== undefined) {
+			const targetX = sortedXPositions[releaseIndex];
+			const targetRects = barGroups.get(targetX);
+			const rectWidth = targetRects[0] ? parseFloat(targetRects[0].getAttribute('width')) : 0;
+			xPosition = targetX + (rectWidth / 2);
+		} else {
+			// Fallback to calculation
+			const chartWidth = width - margin.left - margin.right;
+			const barWidth = chartWidth / displayHistory.length;
+			xPosition = margin.left + (releaseIndex * barWidth) + (barWidth / 2);
+		}
+
+		// Create vertical dashed line
+		const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+		line.setAttribute('x1', xPosition);
+		line.setAttribute('y1', 0);
+		line.setAttribute('x2', xPosition);
+		line.setAttribute('y2', vbHeight - margin.bottom - margin.top);
+		line.setAttribute('stroke', '#e63946');
+		line.setAttribute('stroke-width', '2');
+		line.setAttribute('stroke-dasharray', '5,5');
+		line.setAttribute('opacity', '0.7');
+
+		// Create text label
+		const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+		text.setAttribute('x', xPosition);
+		text.setAttribute('y', -5);
+		text.setAttribute('text-anchor', 'middle');
+		text.setAttribute('fill', '#e63946');
+		text.setAttribute('font-family', 'Gaegu, cursive');
+		text.setAttribute('font-size', isMobile ? '11' : '13');
+		text.setAttribute('font-weight', 'bold');
+		text.textContent = annotation.label;
+
+		// Append to chart group
+		if (chartGroup) {
+			chartGroup.appendChild(line);
+			chartGroup.appendChild(text);
+		} else {
+			svg.appendChild(line);
+			svg.appendChild(text);
+		}
 	});
 }
 
