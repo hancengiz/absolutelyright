@@ -52,3 +52,4 @@ target/
 pageviews.log
 counts.db
 
+scripts/__pycache__/

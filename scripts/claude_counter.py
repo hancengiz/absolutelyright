@@ -23,7 +23,7 @@ PATTERNS = {
 # "excellent": r"Excellent!"
 
 
-def upload_to_api(api_url, secret, date_str, count, right_count=None):
+def upload_to_api(api_url, secret, date_str, count, right_count=None, total_messages=None):
     """Upload counts to API. Returns True/False/'STOP'"""
     if not api_url:
         return False
@@ -34,6 +34,8 @@ def upload_to_api(api_url, secret, date_str, count, right_count=None):
             data["secret"] = secret
         if right_count is not None:
             data["right_count"] = right_count
+        if total_messages is not None:
+            data["total_messages"] = total_messages
 
         req = urllib.request.Request(
             f"{api_url}/api/set",

@@ -20,6 +20,7 @@ struct DayCount {
     day: String,
     count: u32,
     right_count: u32,
+    total_messages: u32,
 }
 
 #[tokio::main]
@@ -45,6 +46,10 @@ async fn main() {
         // Add right_count column if it doesn't exist (for existing databases)
         let _ = conn.execute(
             "ALTER TABLE day_counts ADD COLUMN right_count INTEGER DEFAULT 0",
+            [],
+        );
+        let _ = conn.execute(
+            "ALTER TABLE day_counts ADD COLUMN total_messages INTEGER DEFAULT 0",
             [],
         );
         Ok(())
@@ -94,15 +99,19 @@ async fn get_today(
 ) {
     let today = Utc::now().format("%Y-%m-%d").to_string();
 
-    let (count, right_count) = state
+    let (count, right_count, total_messages) = state
         .call(move |conn| {
             let mut stmt =
-                conn.prepare("SELECT count, right_count FROM day_counts WHERE day = ?1")?;
+                conn.prepare("SELECT count, right_count, total_messages FROM day_counts WHERE day = ?1")?;
             let result = stmt
                 .query_row([&today], |row| {
-                    Ok((row.get::<_, u32>(0)?, row.get::<_, u32>(1).unwrap_or(0)))
+                    Ok((
+                        row.get::<_, u32>(0)?,
+                        row.get::<_, u32>(1).unwrap_or(0),
+                        row.get::<_, u32>(2).unwrap_or(0)
+                    ))
                 })
-                .unwrap_or((0, 0));
+                .unwrap_or((0, 0, 0));
             Ok(result)
         })
         .await
@@ -111,6 +120,7 @@ async fn get_today(
     let mut map = HashMap::new();
     map.insert("count", count);
     map.insert("right_count", right_count);
+    map.insert("total_messages", total_messages);
 
     // Cache for 1 minutes
     (
@@ -128,13 +138,14 @@ async fn get_history(
     let history = state
         .call(|conn| {
             let mut stmt =
-                conn.prepare("SELECT day, count, right_count FROM day_counts ORDER BY day")?;
+                conn.prepare("SELECT day, count, right_count, total_messages FROM day_counts ORDER BY day")?;
             let days = stmt
                 .query_map([], |row| {
                     Ok(DayCount {
                         day: row.get(0)?,
                         count: row.get(1)?,
                         right_count: row.get(2).unwrap_or(0),
+                        total_messages: row.get(3).unwrap_or(0),
                     })
                 })?
                 .collect::<Result<Vec<_>, _>>()?;
@@ -158,6 +169,7 @@ struct SetRequest {
     day: String,
     count: u32,
     right_count: Option<u32>,
+    total_messages: Option<u32>,
     secret: Option<String>,
 }
 
@@ -180,15 +192,17 @@ async fn set_day(
     // If ABSOLUTELYRIGHT_SECRET is not set, allow access (for local dev)
 
     let right_count = payload.right_count.unwrap_or(0);
+    let total_messages = payload.total_messages.unwrap_or(0);
     state
         .call(move |conn| {
             conn.execute(
-                "INSERT INTO day_counts (day, count, right_count) VALUES (?1, ?2, ?3)
-                 ON CONFLICT(day) DO UPDATE SET count = ?2, right_count = ?3",
+                "INSERT INTO day_counts (day, count, right_count, total_messages) VALUES (?1, ?2, ?3, ?4)
+                 ON CONFLICT(day) DO UPDATE SET count = ?2, right_count = ?3, total_messages = ?4",
                 [
                     &payload.day,
                     &payload.count.to_string(),
                     &right_count.to_string(),
+                    &total_messages.to_string(),
                 ],
             )?;
             Ok(())

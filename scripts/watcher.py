@@ -61,6 +61,60 @@ def save_pattern_counts(pattern_name, counts):
         json.dump(counts, f, indent=2)
 
 
+def load_total_messages_counts():
+    """Load daily counts of total assistant messages"""
+    filename = os.path.join(DATA_DIR, "daily_total_messages.json")
+    if os.path.exists(filename):
+        try:
+            with open(filename, "r") as f:
+                return json.load(f)
+        except:
+            pass
+    return {}
+
+
+def save_total_messages_counts(counts):
+    """Save daily counts of total assistant messages"""
+    filename = os.path.join(DATA_DIR, "daily_total_messages.json")
+    with open(filename, "w") as f:
+        json.dump(counts, f, indent=2)
+
+
+def backfill_today_total_messages():
+    """Scan all projects and count today's total messages"""
+    today_utc = get_utc_today()
+    total_count = 0
+
+    if not os.path.exists(CLAUDE_PROJECTS_BASE):
+        return 0
+
+    print(f"Backfilling today's ({today_utc}) total message count...")
+
+    for project_dir in Path(CLAUDE_PROJECTS_BASE).iterdir():
+        if project_dir.is_dir() and not project_dir.name.startswith("."):
+            for jsonl_file in project_dir.glob("*.jsonl"):
+                try:
+                    with open(jsonl_file, "r") as f:
+                        for line in f:
+                            try:
+                                entry = json.loads(line)
+                                if entry.get("type") == "assistant":
+                                    timestamp = entry.get("timestamp", "")
+                                    if timestamp:
+                                        entry_time = datetime.fromisoformat(
+                                            timestamp.replace("Z", "+00:00")
+                                        )
+                                        date_str = entry_time.strftime("%Y-%m-%d")
+                                        if date_str == today_utc:
+                                            total_count += 1
+                            except:
+                                continue
+                except:
+                    pass
+
+    return total_count
+
+
 def main():
     """Main watcher loop"""
     ensure_data_dir()
@@ -96,6 +150,14 @@ def main():
     processed_ids = load_processed_ids()
     project_counts = load_project_counts()
     pattern_counts = {name: load_pattern_counts(name) for name in PATTERNS}
+    total_messages_counts = load_total_messages_counts()
+
+    # Backfill today's total message count on startup
+    today_utc = get_utc_today()
+    today_total_actual = backfill_today_total_messages()
+    total_messages_counts[today_utc] = today_total_actual
+    save_total_messages_counts(total_messages_counts)
+    print(f"Found {today_total_actual} total messages for today")
 
     # Upload today's data on startup if API is configured
     if api_url:
@@ -103,15 +165,16 @@ def main():
         today_local = datetime.now().strftime("%Y-%m-%d")
         today_abs = pattern_counts["absolutely"].get(today_utc, 0)
         today_right = pattern_counts["right"].get(today_utc, 0)
+        today_total = total_messages_counts.get(today_utc, 0)
 
         timezone_note = ""
         if today_utc != today_local:
             timezone_note = f" (UTC {today_utc}, local {today_local})"
 
         print(
-            f"Uploading today's counts{timezone_note}: absolutely={today_abs}, right={today_right}"
+            f"Uploading today's counts{timezone_note}: absolutely={today_abs}, right={today_right}, total_messages={today_total}"
         )
-        if upload_to_api(api_url, api_secret, today_utc, today_abs, today_right):
+        if upload_to_api(api_url, api_secret, today_utc, today_abs, today_right, today_total):
             print("  ✓ Upload successful")
         else:
             print("  ✗ Upload failed")
@@ -126,6 +189,7 @@ def main():
     try:
         while True:
             new_matches_by_pattern = {name: 0 for name in PATTERNS}
+            new_total_messages = 0
 
             for project_dir in Path(CLAUDE_PROJECTS_BASE).iterdir():
                 if project_dir.is_dir() and not project_dir.name.startswith("."):
@@ -141,12 +205,18 @@ def main():
                             # Add to processed IDs
                             processed_ids.add(match["id"])
 
+                            # Update total messages count for the day
+                            date_str = match["date"]
+                            if date_str not in total_messages_counts:
+                                total_messages_counts[date_str] = 0
+                            total_messages_counts[date_str] += 1
+                            new_total_messages += 1
+
                             # Update counts for each matched pattern
                             for pattern_name in match["matches"]:
                                 new_matches_by_pattern[pattern_name] += 1
 
                                 # Update daily counts
-                                date_str = match["date"]
                                 if date_str not in pattern_counts[pattern_name]:
                                     pattern_counts[pattern_name][date_str] = 0
                                 pattern_counts[pattern_name][date_str] += 1
@@ -163,30 +233,34 @@ def main():
                                 f"[{datetime.now().strftime('%H:%M:%S')}] {', '.join(match_types).upper()} in {project_name}: {match['text']}"
                             )
 
-            if any(new_matches_by_pattern.values()):
+            if any(new_matches_by_pattern.values()) or new_total_messages > 0:
                 # Save all state
                 save_project_counts(project_counts)
                 save_processed_ids(processed_ids)
                 for pattern_name, counts in pattern_counts.items():
                     save_pattern_counts(pattern_name, counts)
+                save_total_messages_counts(total_messages_counts)
 
                 updates = [
                     f"{name}: +{count}"
                     for name, count in new_matches_by_pattern.items()
                     if count > 0
                 ]
+                if new_total_messages > 0:
+                    updates.append(f"total_messages: +{new_total_messages}")
                 print(f"Updated: {', '.join(updates)}")
 
-                # Upload to API if configured (only absolutely and right)
+                # Upload to API if configured
                 if api_url:
                     today_utc = get_utc_today()
                     today_abs = pattern_counts["absolutely"].get(today_utc, 0)
                     today_right = pattern_counts["right"].get(today_utc, 0)
+                    today_total = total_messages_counts.get(today_utc, 0)
                     if upload_to_api(
-                        api_url, api_secret, today_utc, today_abs, today_right
+                        api_url, api_secret, today_utc, today_abs, today_right, today_total
                     ):
                         print(
-                            f"  ✓ Uploaded to API: absolutely={today_abs}, right={today_right}"
+                            f"  ✓ Uploaded to API: absolutely={today_abs}, right={today_right}, total_messages={today_total}"
                         )
 
             time.sleep(int(os.environ.get("CHECK_INTERVAL", "2")))

@@ -10,11 +10,12 @@ def scan_all_projects():
     daily_counts = {name: defaultdict(int) for name in PATTERNS}
     total_counts = {name: 0 for name in PATTERNS}
     project_breakdown = defaultdict(lambda: defaultdict(int))
+    total_messages_per_day = defaultdict(int)
 
     if not os.path.exists(CLAUDE_PROJECTS_BASE):
         print(f"Error: Projects directory not found at {CLAUDE_PROJECTS_BASE}")
         print("Set CLAUDE_PROJECTS env variable to your Claude projects path")
-        return daily_counts, project_breakdown
+        return daily_counts, project_breakdown, total_messages_per_day
 
     print("Scanning all Claude projects...")
 
@@ -23,6 +24,28 @@ def scan_all_projects():
             project_name = get_project_display_name(project_dir.name)
 
             for jsonl_file in project_dir.glob("*.jsonl"):
+                # Count all assistant messages
+                try:
+                    with open(jsonl_file, "r") as f:
+                        for line in f:
+                            try:
+                                entry = json.loads(line)
+                                if entry.get("type") == "assistant":
+                                    timestamp = entry.get("timestamp", "")
+                                    if timestamp:
+                                        entry_time = datetime.fromisoformat(
+                                            timestamp.replace("Z", "+00:00")
+                                        )
+                                        date_str = entry_time.strftime("%Y-%m-%d")
+                                    else:
+                                        date_str = get_utc_today()
+                                    total_messages_per_day[date_str] += 1
+                            except:
+                                continue
+                except:
+                    pass
+
+                # Count pattern matches
                 matches = scan_jsonl_file(
                     jsonl_file, set(), project_name, compiled_patterns
                 )
@@ -38,7 +61,7 @@ def scan_all_projects():
         unique_days = len(daily_counts[name])
         print(f"Found {count} '{name}' across {unique_days} days")
 
-    return daily_counts, project_breakdown
+    return daily_counts, project_breakdown, total_messages_per_day
 
 
 def main():
@@ -69,7 +92,7 @@ def main():
     print("-" * 50)
 
     # Scan all projects
-    daily_counts, project_breakdown = scan_all_projects()
+    daily_counts, project_breakdown, total_messages_per_day = scan_all_projects()
 
     if not any(daily_counts.values()):
         print("No data found.")
@@ -99,6 +122,7 @@ def main():
         for date in sorted_dates:
             abs_count = daily_counts["absolutely"].get(date, 0)
             right_count = daily_counts["right"].get(date, 0)
+            total_msgs = total_messages_per_day.get(date, 0)
             projects = project_breakdown.get(date, {})
 
             project_info = ""
@@ -116,7 +140,7 @@ def main():
                     )
 
             print(
-                f"{date}: absolutely={abs_count:3d}, right={right_count:3d}{project_info}"
+                f"{date}: absolutely={abs_count:3d}, right={right_count:3d}, total={total_msgs:3d}{project_info}"
             )
 
         print("-" * 50)
@@ -146,13 +170,14 @@ def main():
             for date in sorted_dates:
                 abs_count = daily_counts["absolutely"].get(date, 0)
                 right_count = daily_counts["right"].get(date, 0)
+                total_msgs = total_messages_per_day.get(date, 0)
 
                 if abs_count > 0 or right_count > 0:
-                    upload_text = f"  Uploading {date}: absolutely={abs_count:2d}, right={right_count:2d}..."
-                    print(f"{upload_text:<60}", end="")
+                    upload_text = f"  Uploading {date}: absolutely={abs_count:2d}, right={right_count:2d}, total={total_msgs:3d}..."
+                    print(f"{upload_text:<75}", end="")
 
                     result = upload_to_api(
-                        api_url, secret, date, abs_count, right_count
+                        api_url, secret, date, abs_count, right_count, total_msgs
                     )
                     if result == True:
                         print("✓")
