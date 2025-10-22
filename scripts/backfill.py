@@ -11,6 +11,7 @@ def scan_all_projects():
     total_counts = {name: 0 for name in PATTERNS}
     project_breakdown = defaultdict(lambda: defaultdict(int))
     total_messages_per_day = defaultdict(int)
+    seen_message_ids = set()  # Track processed message IDs to avoid duplicates
 
     if not os.path.exists(CLAUDE_PROJECTS_BASE):
         print(f"Error: Projects directory not found at {CLAUDE_PROJECTS_BASE}")
@@ -24,38 +25,43 @@ def scan_all_projects():
             project_name = get_project_display_name(project_dir.name)
 
             for jsonl_file in project_dir.glob("*.jsonl"):
-                # Count all assistant messages
                 try:
                     with open(jsonl_file, "r") as f:
                         for line in f:
                             try:
                                 entry = json.loads(line)
-                                if entry.get("type") == "assistant":
-                                    timestamp = entry.get("timestamp", "")
-                                    if timestamp:
-                                        entry_time = datetime.fromisoformat(
-                                            timestamp.replace("Z", "+00:00")
-                                        )
-                                        date_str = entry_time.strftime("%Y-%m-%d")
-                                    else:
-                                        date_str = get_utc_today()
-                                    total_messages_per_day[date_str] += 1
+                                result = process_message_entry(entry, compiled_patterns)
+
+                                if not result:
+                                    continue
+
+                                msg_id = result["msg_id"]
+
+                                # Skip if we've already processed this message
+                                if msg_id in seen_message_ids:
+                                    continue
+
+                                seen_message_ids.add(msg_id)
+                                date_str = result["date_str"]
+
+                                # Count total assistant messages
+                                total_messages_per_day[date_str] += 1
+
+                                # Count pattern matches (once per message, not per text block)
+                                message_patterns = set()
+                                for text, matched_patterns in result["text_blocks"]:
+                                    message_patterns.update(matched_patterns.keys())
+
+                                for pattern_name in message_patterns:
+                                    daily_counts[pattern_name][date_str] += 1
+                                    total_counts[pattern_name] += 1
+                                    if pattern_name == "absolutely":
+                                        project_breakdown[date_str][project_name] += 1
+
                             except:
                                 continue
                 except:
                     pass
-
-                # Count pattern matches
-                matches = scan_jsonl_file(
-                    jsonl_file, set(), project_name, compiled_patterns
-                )
-
-                for match in matches:
-                    for pattern_name in match["matches"]:
-                        daily_counts[pattern_name][match["date"]] += 1
-                        total_counts[pattern_name] += 1
-                        if pattern_name == "absolutely":
-                            project_breakdown[match["date"]][project_name] += 1
 
     for name, count in total_counts.items():
         unique_days = len(daily_counts[name])
@@ -98,11 +104,18 @@ def main():
         print("No data found.")
         return
 
-    # Get all dates that have any data
+    # Get all dates that have any data (pattern matches OR total messages)
     all_dates = set()
     for pattern_counts in daily_counts.values():
         all_dates.update(pattern_counts.keys())
+    all_dates.update(total_messages_per_day.keys())
     sorted_dates = sorted(all_dates)
+
+    # Skip the first day (exclude from display and upload)
+    if sorted_dates:
+        first_day = sorted_dates[0]
+        sorted_dates = sorted_dates[1:]
+        print(f"\nSkipping first day ({first_day}) from output and upload")
 
     print("\nDaily counts:")
     print("-" * 80)

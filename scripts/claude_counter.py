@@ -66,71 +66,52 @@ def upload_to_api(api_url, secret, date_str, count, right_count=None, total_mess
         return False
 
 
-def scan_jsonl_file(filepath, processed_ids, project_name, compiled_patterns):
-    """Scan a JSONL file for pattern matches"""
-    new_matches = []
+def process_message_entry(entry, compiled_patterns):
+    """
+    Process a single JSONL entry and extract message info + pattern matches.
 
-    try:
-        with open(filepath, "r") as f:
-            for line in f:
-                try:
-                    entry = json.loads(line)
+    Returns dict with:
+        - msg_id: The message UUID
+        - date_str: Date in YYYY-MM-DD format
+        - text_blocks: List of (text, matched_patterns) tuples
+    Returns None if entry should be skipped.
+    """
+    if entry.get("type") != "assistant":
+        return None
 
-                    if entry.get("type") != "assistant":
-                        continue
+    msg_id = entry.get("uuid") or entry.get("requestId")
+    if not msg_id:
+        return None
 
-                    msg_id = entry.get("uuid") or entry.get("requestId")
-                    if not msg_id or msg_id in processed_ids:
-                        continue
-                    message = entry.get("message", {})
-                    if "content" in message:
-                        for content_item in message.get("content", []):
-                            if (
-                                isinstance(content_item, dict)
-                                and content_item.get("type") == "text"
-                            ):
-                                text = content_item.get("text", "")
+    # Parse timestamp
+    timestamp = entry.get("timestamp", "")
+    if timestamp:
+        entry_time = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+        date_str = entry_time.strftime("%Y-%m-%d")
+    else:
+        date_str = get_utc_today()
 
-                                timestamp = entry.get("timestamp", "")
-                                if timestamp:
-                                    entry_time = datetime.fromisoformat(
-                                        timestamp.replace("Z", "+00:00")
-                                    )
-                                    time_str = entry_time.strftime("%H:%M:%S")
-                                    date_str = entry_time.strftime("%Y-%m-%d")
-                                else:
-                                    time_str = "unknown"
-                                    date_str = get_utc_today()
+    # Extract text blocks and check for pattern matches
+    text_blocks = []
+    message = entry.get("message", {})
+    if "content" in message:
+        for content_item in message.get("content", []):
+            if isinstance(content_item, dict) and content_item.get("type") == "text":
+                text = content_item.get("text", "")
 
-                                matches = {}
-                                for (
-                                    pattern_name,
-                                    pattern_regex,
-                                ) in compiled_patterns.items():
-                                    if pattern_regex.search(text):
-                                        matches[pattern_name] = True
+                # Check for pattern matches
+                matched_patterns = {}
+                for pattern_name, pattern_regex in compiled_patterns.items():
+                    if pattern_regex.search(text):
+                        matched_patterns[pattern_name] = True
 
-                                if matches:
-                                    new_matches.append(
-                                        {
-                                            "id": msg_id,
-                                            "time": time_str,
-                                            "date": date_str,
-                                            "text": text.strip()[:100],
-                                            "project": project_name,
-                                            "matches": matches,
-                                        }
-                                    )
+                text_blocks.append((text, matched_patterns))
 
-                except json.JSONDecodeError:
-                    continue
-                except Exception:
-                    continue
-
-    except Exception:
-        pass
-
-    return new_matches
+    return {
+        "msg_id": msg_id,
+        "date_str": date_str,
+        "text_blocks": text_blocks,
+    }
 
 
 def get_project_display_name(project_dir_name):

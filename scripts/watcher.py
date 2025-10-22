@@ -81,9 +81,9 @@ def save_total_messages_counts(counts):
 
 
 def backfill_today_total_messages():
-    """Scan all projects and count today's total messages"""
+    """Scan all projects and count today's total messages (deduplicated)"""
     today_utc = get_utc_today()
-    total_count = 0
+    seen_message_ids = set()
 
     if not os.path.exists(CLAUDE_PROJECTS_BASE):
         return 0
@@ -99,20 +99,88 @@ def backfill_today_total_messages():
                             try:
                                 entry = json.loads(line)
                                 if entry.get("type") == "assistant":
+                                    msg_id = entry.get("uuid") or entry.get("requestId")
+                                    if not msg_id:
+                                        continue
+
                                     timestamp = entry.get("timestamp", "")
                                     if timestamp:
                                         entry_time = datetime.fromisoformat(
                                             timestamp.replace("Z", "+00:00")
                                         )
                                         date_str = entry_time.strftime("%Y-%m-%d")
-                                        if date_str == today_utc:
-                                            total_count += 1
+                                        if date_str == today_utc and msg_id not in seen_message_ids:
+                                            seen_message_ids.add(msg_id)
                             except:
                                 continue
                 except:
                     pass
 
-    return total_count
+    return len(seen_message_ids)
+
+
+def backfill_today_patterns(compiled_patterns, processed_ids, project_counts):
+    """Scan all projects for today's pattern matches and mark them as processed"""
+    today_utc = get_utc_today()
+    pattern_matches = {name: 0 for name in PATTERNS}
+    seen_today = set()  # Track messages seen during this backfill to avoid duplicates
+
+    if not os.path.exists(CLAUDE_PROJECTS_BASE):
+        return pattern_matches
+
+    print(f"Backfilling today's ({today_utc}) pattern matches...")
+
+    for project_dir in Path(CLAUDE_PROJECTS_BASE).iterdir():
+        if project_dir.is_dir() and not project_dir.name.startswith("."):
+            project_name = get_project_display_name(project_dir.name)
+
+            for jsonl_file in project_dir.glob("*.jsonl"):
+                try:
+                    with open(jsonl_file, "r") as f:
+                        for line in f:
+                            try:
+                                entry = json.loads(line)
+                                result = process_message_entry(entry, compiled_patterns)
+
+                                if not result:
+                                    continue
+
+                                msg_id = result["msg_id"]
+                                date_str = result["date_str"]
+
+                                # Only process today's messages
+                                if date_str != today_utc:
+                                    continue
+
+                                # Skip if already counted in this backfill (deduplication)
+                                if msg_id in seen_today:
+                                    continue
+
+                                seen_today.add(msg_id)
+
+                                # Mark as processed for the main loop
+                                processed_ids.add(msg_id)
+
+                                # Process text blocks for pattern matches (count once per message)
+                                message_patterns = set()
+                                for text, matched_patterns in result["text_blocks"]:
+                                    message_patterns.update(matched_patterns.keys())
+
+                                for pattern_name in message_patterns:
+                                    pattern_matches[pattern_name] += 1
+
+                                    # Update project counts (only for "absolutely")
+                                    if pattern_name == "absolutely":
+                                        if project_name not in project_counts:
+                                            project_counts[project_name] = 0
+                                        project_counts[project_name] += 1
+
+                            except:
+                                continue
+                except:
+                    pass
+
+    return pattern_matches
 
 
 def main():
@@ -159,6 +227,20 @@ def main():
     save_total_messages_counts(total_messages_counts)
     print(f"Found {today_total_actual} total messages for today")
 
+    # Backfill today's pattern matches on startup (replaces today's counts)
+    # Reset project_counts since we're doing a full recount
+    project_counts = {}
+    backfill_pattern_matches = backfill_today_patterns(compiled_patterns, processed_ids, project_counts)
+    for pattern_name, count in backfill_pattern_matches.items():
+        if count > 0:
+            pattern_counts[pattern_name][today_utc] = count  # SET, not ADD
+            save_pattern_counts(pattern_name, pattern_counts[pattern_name])
+            print(f"Found {count} '{pattern_name}' matches for today")
+
+    # Save processed IDs and project counts after backfill
+    save_processed_ids(processed_ids)
+    save_project_counts(project_counts)
+
     # Upload today's data on startup if API is configured
     if api_url:
         today_utc = get_utc_today()
@@ -197,41 +279,66 @@ def main():
 
                     # Scan all JSONL files in this project
                     for jsonl_file in project_dir.glob("*.jsonl"):
-                        matches = scan_jsonl_file(
-                            jsonl_file, processed_ids, project_name, compiled_patterns
-                        )
+                        # Single pass: count total messages and check for pattern matches
+                        try:
+                            with open(jsonl_file, "r") as f:
+                                for line in f:
+                                    try:
+                                        entry = json.loads(line)
+                                        result = process_message_entry(entry, compiled_patterns)
 
-                        for match in matches:
-                            # Add to processed IDs
-                            processed_ids.add(match["id"])
+                                        if not result:
+                                            continue
 
-                            # Update total messages count for the day
-                            date_str = match["date"]
-                            if date_str not in total_messages_counts:
-                                total_messages_counts[date_str] = 0
-                            total_messages_counts[date_str] += 1
-                            new_total_messages += 1
+                                        msg_id = result["msg_id"]
+                                        date_str = result["date_str"]
 
-                            # Update counts for each matched pattern
-                            for pattern_name in match["matches"]:
-                                new_matches_by_pattern[pattern_name] += 1
+                                        if msg_id in processed_ids:
+                                            continue
 
-                                # Update daily counts
-                                if date_str not in pattern_counts[pattern_name]:
-                                    pattern_counts[pattern_name][date_str] = 0
-                                pattern_counts[pattern_name][date_str] += 1
+                                        # Mark as processed
+                                        processed_ids.add(msg_id)
 
-                                # Update project counts (only for "absolutely")
-                                if pattern_name == "absolutely":
-                                    if project_name not in project_counts:
-                                        project_counts[project_name] = 0
-                                    project_counts[project_name] += 1
+                                        # Update total messages count
+                                        if date_str not in total_messages_counts:
+                                            total_messages_counts[date_str] = 0
+                                        total_messages_counts[date_str] += 1
+                                        new_total_messages += 1
 
-                            # Print notification
-                            match_types = list(match["matches"].keys())
-                            print(
-                                f"[{datetime.now().strftime('%H:%M:%S')}] {', '.join(match_types).upper()} in {project_name}: {match['text']}"
-                            )
+                                        # Process text blocks for pattern matches (count once per message)
+                                        message_patterns = set()
+                                        first_match_text = None
+                                        for text, matched_patterns in result["text_blocks"]:
+                                            if matched_patterns:
+                                                message_patterns.update(matched_patterns.keys())
+                                                if first_match_text is None:
+                                                    first_match_text = text
+
+                                        if message_patterns:
+                                            for pattern_name in message_patterns:
+                                                new_matches_by_pattern[pattern_name] += 1
+
+                                                # Update daily counts
+                                                if date_str not in pattern_counts[pattern_name]:
+                                                    pattern_counts[pattern_name][date_str] = 0
+                                                pattern_counts[pattern_name][date_str] += 1
+
+                                                # Update project counts (only for "absolutely")
+                                                if pattern_name == "absolutely":
+                                                    if project_name not in project_counts:
+                                                        project_counts[project_name] = 0
+                                                    project_counts[project_name] += 1
+
+                                            # Print notification (once per message)
+                                            match_types = list(message_patterns)
+                                            print(
+                                                f"[{datetime.now().strftime('%H:%M:%S')}] {', '.join(match_types).upper()} in {project_name}: {first_match_text.strip()[:100]}"
+                                            )
+
+                                    except:
+                                        continue
+                        except:
+                            pass
 
             if any(new_matches_by_pattern.values()) or new_total_messages > 0:
                 # Save all state
