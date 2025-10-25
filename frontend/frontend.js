@@ -11,21 +11,13 @@ async function fetchToday(animate = false) {
 		const subtitleElement = document.querySelector(".subtitle");
 		const rightCountElement = document.getElementById("right-count");
 
-		// Extract pattern counts (filter out total_messages)
-		const patterns = Object.entries(data).filter(([key]) => key !== 'total_messages');
+		// Primary count is always "absolutely"
+		const primaryCount = data.absolutely || 0;
 
-		// Primary count is "absolutely" if it exists, otherwise first pattern
-		const primaryPattern = patterns.find(([key]) => key === 'absolutely') || patterns[0];
-		const primaryCount = primaryPattern ? primaryPattern[1] : 0;
-
-		// Build secondary patterns text (all except primary)
-		const secondaryPatterns = patterns.filter(([key]) => key !== (primaryPattern ? primaryPattern[0] : null));
-		if (secondaryPatterns.length > 0 && secondaryPatterns.some(([, count]) => count > 0)) {
-			const secondaryText = secondaryPatterns
-				.filter(([, count]) => count > 0)
-				.map(([key, count]) => `${count} × "${key}"`)
-				.join(', ');
-			rightCountElement.textContent = `(+ ${secondaryText})`;
+		// Show only "right" count in subtitle (keep original format)
+		const rightCount = data.right || 0;
+		if (rightCount > 0) {
+			rightCountElement.textContent = `(+ ${rightCount} times I was just "right")`;
 			rightCountElement.style.display = "block";
 		} else {
 			rightCountElement.style.display = "none";
@@ -157,13 +149,16 @@ function drawChart(history) {
 		return;
 	}
 	
+	// Define colors for all possible patterns (will use only as many as needed)
+	const colors = ['coral', 'skyblue', '#FFB84D', '#9D5C63', '#7FB685', '#E6A5C1'];
+
 	new roughViz.StackedBar({
 		element: '#chart-container',
 		data: data,
 		labels: 'date',
 		width: width,
 		height: height,
-		highlight: ['coral', 'skyblue'],
+		highlight: colors,
 		roughness: 1.5,
 		font: 'Gaegu',
 		xLabel: '',
