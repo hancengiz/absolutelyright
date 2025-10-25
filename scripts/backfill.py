@@ -80,13 +80,13 @@ def main():
     secret = None
 
     for i, arg in enumerate(sys.argv):
-        if arg == "--upload" and i + 2 < len(sys.argv):
-            api_url = sys.argv[i + 1]
-            secret = sys.argv[i + 2]
-            break
-        elif arg == "--upload" and i + 1 < len(sys.argv):
-            api_url = sys.argv[i + 1]
-            break
+        if arg == "--upload":
+            # Check if next arg is a URL (doesn't start with --)
+            if i + 1 < len(sys.argv) and not sys.argv[i + 1].startswith("--"):
+                api_url = sys.argv[i + 1]
+                # Check if there's a secret after the URL
+                if i + 2 < len(sys.argv) and not sys.argv[i + 2].startswith("--"):
+                    secret = sys.argv[i + 2]
         elif arg == "--secret" and i + 1 < len(sys.argv):
             secret = sys.argv[i + 1]
 
