@@ -21,6 +21,43 @@ async function loadDisplayConfig() {
 	}
 }
 
+function generateLegend() {
+	const legendContainer = document.getElementById("chart-legend");
+	if (!legendContainer || !DISPLAY_CONFIG) return;
+
+	const patterns = DISPLAY_CONFIG.chart?.patterns || [];
+	const labels = DISPLAY_CONFIG.chart?.labels || {};
+	const colors = DISPLAY_CONFIG.chart?.colors || [];
+
+	// Get the total messages legend item to keep it at the end
+	const totalMessagesItem = legendContainer.querySelector('.legend-item');
+
+	// Clear the legend except for the total messages item
+	legendContainer.innerHTML = '';
+
+	// Add legend items for each pattern
+	patterns.forEach((pattern, index) => {
+		const legendItem = document.createElement('span');
+		legendItem.className = 'legend-item';
+
+		const legendColor = document.createElement('span');
+		legendColor.className = 'legend-color';
+		legendColor.style.background = colors[index] || '#ccc';
+
+		const label = labels[pattern] || (pattern.charAt(0).toUpperCase() + pattern.slice(1));
+
+		legendItem.appendChild(legendColor);
+		legendItem.appendChild(document.createTextNode(' ' + label));
+
+		legendContainer.appendChild(legendItem);
+	});
+
+	// Add the total messages item back at the end
+	if (totalMessagesItem) {
+		legendContainer.appendChild(totalMessagesItem);
+	}
+}
+
 function getWeekStart(date) {
 	const d = new Date(date);
 	const day = d.getDay();
@@ -513,12 +550,16 @@ roughScript.onload = () => {
 		// Load display config first
 		await loadDisplayConfig();
 
+		// Generate legend from config
+		generateLegend();
+
 		// Initial load with animation
 		fetchToday(true);
 		fetchHistory().then(() => {
 			// Initialize total line legend toggle
 			const legendItems = document.querySelectorAll('.legend-item');
-			const totalLegendItem = legendItems[2]; // Third item is total assistant messages
+			// Find the total messages legend item (last item)
+			const totalLegendItem = legendItems[legendItems.length - 1];
 
 			if (totalLegendItem) {
 				totalLegendItem.style.cursor = 'pointer';
