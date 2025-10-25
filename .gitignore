@@ -53,4 +53,16 @@ pageviews.log
 counts.db
 logs/
 
-scripts/__pycache__/
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+*.egg-info/
+dist/
+build/
