@@ -248,7 +248,24 @@ All APIs remain 100% compatible:
 5. Archive old Rust code
 
 ### For Production (Railway with Docker)
-1. Replace Dockerfile with Python version
+
+#### Volume Setup (Before First Deploy)
+```bash
+# Add persistent volume for database
+railway volume add --mount-path /app/data
+
+# Verify volume created
+railway volume list
+```
+
+**Volume Details:**
+- Mount path: `/app/data`
+- Size: 5GB (Hobby plan default, billed only for usage)
+- Purpose: Persistent SQLite database storage
+- Note: Cannot specify custom size via CLI (plan-based)
+
+#### Deployment Steps
+1. Replace Dockerfile with Python version ✅
 2. Ensure environment variables are set (PORT, ABSOLUTELYRIGHT_SECRET)
 3. Deploy new version (Railway will detect Dockerfile automatically)
 4. Verify database persists correctly in `/app/data` volume
