@@ -7,11 +7,20 @@ from sqlalchemy.orm import declarative_base
 # Determine database path - support /app/data for production, local file otherwise
 DB_PATH = os.getenv("DATABASE_PATH")
 if not DB_PATH:
-    if Path("/app/data").exists():
-        DB_PATH = "/app/data/counts.db"
+    # Try /app/data for Railway/Docker, fall back to local
+    data_dir = Path("/app/data")
+    if data_dir.exists():
+        # Railway volume is mounted, use it
+        DB_PATH = str(data_dir / "counts.db")
+    elif os.getenv("RAILWAY_ENVIRONMENT"):
+        # On Railway but volume not mounted yet - use local path as fallback
+        print("WARNING: Railway detected but /app/data not found, using local path")
+        DB_PATH = "counts.db"
     else:
+        # Local development
         DB_PATH = "counts.db"
 
+print(f"Using database path: {DB_PATH}")
 DATABASE_URL = f"sqlite+aiosqlite:///{DB_PATH}"
 
 # Create async engine
