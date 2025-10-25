@@ -16,7 +16,16 @@ async function loadDisplayConfig() {
 		DISPLAY_CONFIG = {
 			title: { primary_pattern: "absolutely", show_this_week: true },
 			subtitle: { show_pattern: "right" },
-			chart: { patterns: ["absolutely", "right"], colors: ["coral", "skyblue"] }
+			chart: {
+				patterns: ["absolutely", "right", "perfect", "excellent"],
+				labels: {
+					"absolutely": "Absolutely right",
+					"right": "Just right",
+					"perfect": "Perfect",
+					"excellent": "Excellent"
+				},
+				colors: ["coral", "skyblue", "#FFB84D", "#9D5C63"]
+			}
 		};
 	}
 }
@@ -29,10 +38,11 @@ function generateLegend() {
 	const labels = DISPLAY_CONFIG.chart?.labels || {};
 	const colors = DISPLAY_CONFIG.chart?.colors || [];
 
-	// Get the total messages legend item to keep it at the end
+	// Clone the total messages legend item to keep it at the end
 	const totalMessagesItem = legendContainer.querySelector('.legend-item');
+	const totalMessagesClone = totalMessagesItem ? totalMessagesItem.cloneNode(true) : null;
 
-	// Clear the legend except for the total messages item
+	// Clear the legend
 	legendContainer.innerHTML = '';
 
 	// Add legend items for each pattern
@@ -53,8 +63,8 @@ function generateLegend() {
 	});
 
 	// Add the total messages item back at the end
-	if (totalMessagesItem) {
-		legendContainer.appendChild(totalMessagesItem);
+	if (totalMessagesClone) {
+		legendContainer.appendChild(totalMessagesClone);
 	}
 }
 
