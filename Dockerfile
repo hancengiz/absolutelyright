@@ -14,8 +14,9 @@ COPY frontend ./frontend
 # Create directory for database
 RUN mkdir -p /app/data
 
-# Expose port
-EXPOSE 3003
+# Expose port (Railway will use $PORT environment variable)
+EXPOSE ${PORT:-3003}
 
 # Run the application
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "3003"]
+# Use PORT env var if available (Railway), otherwise default to 3003
+CMD ["sh", "-c", "uvicorn src.main:app --host 0.0.0.0 --port ${PORT:-3003}"]
