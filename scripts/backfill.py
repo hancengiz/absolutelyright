@@ -113,12 +113,7 @@ def main():
     all_dates.update(total_messages_per_day.keys())
     sorted_dates = sorted(all_dates)
 
-    # Skip the first day (exclude from display and upload)
-    if sorted_dates:
-        first_day = sorted_dates[0]
-        sorted_dates = sorted_dates[1:]
-        print(f"\nSkipping first day ({first_day}) from output and upload")
-
+    print(f"\nFound {len(sorted_dates)} days with data")
     print("\nDaily counts:")
     print("-" * 80)
 
