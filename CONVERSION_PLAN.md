@@ -53,6 +53,7 @@ Converting the "Absolutely Right" backend from Rust/Axum to Python/FastAPI while
 - [ ] Create `requirements.txt` with dependencies
 - [ ] Set up virtual environment
 - [ ] Create `src/` directory for Python backend
+- [ ] Create new `Dockerfile` for Python/FastAPI
 
 ### 2. Database Layer
 - [ ] Create `src/database.py` for database connection
@@ -118,6 +119,7 @@ Converting the "Absolutely Right" backend from Rust/Axum to Python/FastAPI while
   database.py          # Database configuration and connection
 
 /requirements.txt      # Python dependencies
+/Dockerfile            # Updated for Python (replaces Rust version)
 
 /counts.db            # SQLite database (existing, no changes)
 ```
@@ -245,11 +247,11 @@ All APIs remain 100% compatible:
 4. Test all endpoints
 5. Archive old Rust code
 
-### For Production (Railway)
-1. Update Railway build settings to use Python
+### For Production (Railway with Docker)
+1. Replace Dockerfile with Python version
 2. Ensure environment variables are set (PORT, ABSOLUTELYRIGHT_SECRET)
-3. Deploy new version
-4. Verify database persists correctly
+3. Deploy new version (Railway will detect Dockerfile automatically)
+4. Verify database persists correctly in `/app/data` volume
 
 ## Risk Assessment
 
@@ -260,8 +262,9 @@ All APIs remain 100% compatible:
 - Python scripts already exist and work
 
 ### Medium Risk ⚠️
-- First-time FastAPI deployment on Railway (switching from Rust)
+- Switching from Rust to Python in Docker container
 - Need to ensure async database operations work correctly
+- Must verify database persistence in Docker volume
 - Cache headers must match exactly for performance
 
 ### Mitigation
