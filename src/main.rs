@@ -18,6 +18,15 @@ use tower_http::set_header::SetResponseHeaderLayer;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 struct DayCount {
     day: String,
+    #[serde(flatten)]
+    patterns: HashMap<String, u32>,
+    total_messages: u32,
+}
+
+// Legacy struct for migration
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct DayCountLegacy {
+    day: String,
     count: u32,
     right_count: u32,
     total_messages: u32,
@@ -38,20 +47,38 @@ async fn main() {
         conn.execute(
             "CREATE TABLE IF NOT EXISTS day_counts (
                 day TEXT PRIMARY KEY,
-                count INTEGER NOT NULL,
-                right_count INTEGER DEFAULT 0
+                patterns TEXT NOT NULL DEFAULT '{}',
+                total_messages INTEGER DEFAULT 0
             )",
             [],
         )?;
-        // Add right_count column if it doesn't exist (for existing databases)
-        let _ = conn.execute(
-            "ALTER TABLE day_counts ADD COLUMN right_count INTEGER DEFAULT 0",
-            [],
-        );
-        let _ = conn.execute(
-            "ALTER TABLE day_counts ADD COLUMN total_messages INTEGER DEFAULT 0",
-            [],
-        );
+
+        // Migration: Add patterns column if it doesn't exist
+        let has_patterns = conn
+            .prepare("SELECT patterns FROM day_counts LIMIT 1")
+            .is_ok();
+
+        if !has_patterns {
+            // Old schema - migrate data
+            println!("Migrating to new schema with dynamic patterns...");
+            let _ = conn.execute(
+                "ALTER TABLE day_counts ADD COLUMN patterns TEXT DEFAULT '{}'",
+                [],
+            );
+
+            // Migrate existing count and right_count to JSON
+            conn.execute(
+                r#"UPDATE day_counts
+                   SET patterns = json_object(
+                       'absolutely', COALESCE(count, 0),
+                       'right', COALESCE(right_count, 0)
+                   )"#,
+                [],
+            )?;
+
+            println!("Migration complete!");
+        }
+
         Ok(())
     })
     .await
@@ -95,32 +122,29 @@ async fn get_today(
     state: axum::extract::State<Arc<Connection>>,
 ) -> (
     [(header::HeaderName, HeaderValue); 1],
-    Json<HashMap<&'static str, u32>>,
+    Json<HashMap<String, u32>>,
 ) {
     let today = Utc::now().format("%Y-%m-%d").to_string();
 
-    let (count, right_count, total_messages) = state
+    let (patterns_json, total_messages) = state
         .call(move |conn| {
             let mut stmt =
-                conn.prepare("SELECT count, right_count, total_messages FROM day_counts WHERE day = ?1")?;
+                conn.prepare("SELECT patterns, total_messages FROM day_counts WHERE day = ?1")?;
             let result = stmt
                 .query_row([&today], |row| {
                     Ok((
-                        row.get::<_, u32>(0)?,
-                        row.get::<_, u32>(1).unwrap_or(0),
-                        row.get::<_, u32>(2).unwrap_or(0)
+                        row.get::<_, String>(0).unwrap_or_else(|_| "{}".to_string()),
+                        row.get::<_, u32>(1).unwrap_or(0)
                     ))
                 })
-                .unwrap_or((0, 0, 0));
+                .unwrap_or(("{}".to_string(), 0));
             Ok(result)
         })
         .await
         .unwrap();
 
-    let mut map = HashMap::new();
-    map.insert("count", count);
-    map.insert("right_count", right_count);
-    map.insert("total_messages", total_messages);
+    let mut map: HashMap<String, u32> = serde_json::from_str(&patterns_json).unwrap_or_default();
+    map.insert("total_messages".to_string(), total_messages);
 
     // Cache for 1 minutes
     (
@@ -138,14 +162,19 @@ async fn get_history(
     let history = state
         .call(|conn| {
             let mut stmt =
-                conn.prepare("SELECT day, count, right_count, total_messages FROM day_counts ORDER BY day")?;
+                conn.prepare("SELECT day, patterns, total_messages FROM day_counts ORDER BY day")?;
             let days = stmt
                 .query_map([], |row| {
+                    let day: String = row.get(0)?;
+                    let patterns_json: String = row.get::<_, String>(1).unwrap_or_else(|_| "{}".to_string());
+                    let total_messages: u32 = row.get(2).unwrap_or(0);
+
+                    let patterns: HashMap<String, u32> = serde_json::from_str(&patterns_json).unwrap_or_default();
+
                     Ok(DayCount {
-                        day: row.get(0)?,
-                        count: row.get(1)?,
-                        right_count: row.get(2).unwrap_or(0),
-                        total_messages: row.get(3).unwrap_or(0),
+                        day,
+                        patterns,
+                        total_messages,
                     })
                 })?
                 .collect::<Result<Vec<_>, _>>()?;
@@ -167,8 +196,12 @@ async fn get_history(
 #[derive(Deserialize)]
 struct SetRequest {
     day: String,
-    count: u32,
+    // Legacy fields (for backward compatibility)
+    count: Option<u32>,
     right_count: Option<u32>,
+    // New format - patterns as a map
+    #[serde(flatten)]
+    patterns: HashMap<String, serde_json::Value>,
     total_messages: Option<u32>,
     secret: Option<String>,
 }
@@ -180,7 +213,7 @@ async fn set_day(
     // Check secret if ABSOLUTELYRIGHT_SECRET is set
     if let Ok(expected_secret) = env::var("ABSOLUTELYRIGHT_SECRET") {
         match payload.secret {
-            Some(provided_secret) if provided_secret == expected_secret => {
+            Some(ref provided_secret) if provided_secret == &expected_secret => {
                 // Secret matches, continue
             }
             _ => {
@@ -191,17 +224,40 @@ async fn set_day(
     }
     // If ABSOLUTELYRIGHT_SECRET is not set, allow access (for local dev)
 
-    let right_count = payload.right_count.unwrap_or(0);
+    // Build patterns map - support both old and new formats
+    let mut patterns_map: HashMap<String, u32> = HashMap::new();
+
+    // Legacy support: if count or right_count are provided
+    if let Some(count) = payload.count {
+        patterns_map.insert("absolutely".to_string(), count);
+    }
+    if let Some(right_count) = payload.right_count {
+        patterns_map.insert("right".to_string(), right_count);
+    }
+
+    // New format: extract numeric values from flattened patterns
+    for (key, value) in payload.patterns {
+        // Skip known non-pattern fields
+        if key == "day" || key == "total_messages" || key == "secret" || key == "count" || key == "right_count" {
+            continue;
+        }
+        // Try to parse as u32
+        if let Some(num) = value.as_u64() {
+            patterns_map.insert(key, num as u32);
+        }
+    }
+
+    let patterns_json = serde_json::to_string(&patterns_map).unwrap();
     let total_messages = payload.total_messages.unwrap_or(0);
+
     state
         .call(move |conn| {
             conn.execute(
-                "INSERT INTO day_counts (day, count, right_count, total_messages) VALUES (?1, ?2, ?3, ?4)
-                 ON CONFLICT(day) DO UPDATE SET count = ?2, right_count = ?3, total_messages = ?4",
+                "INSERT INTO day_counts (day, patterns, total_messages) VALUES (?1, ?2, ?3)
+                 ON CONFLICT(day) DO UPDATE SET patterns = ?2, total_messages = ?3",
                 [
                     &payload.day,
-                    &payload.count.to_string(),
-                    &right_count.to_string(),
+                    &patterns_json,
                     &total_messages.to_string(),
                 ],
             )?;

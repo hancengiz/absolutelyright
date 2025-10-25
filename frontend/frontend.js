@@ -11,17 +11,29 @@ async function fetchToday(animate = false) {
 		const subtitleElement = document.querySelector(".subtitle");
 		const rightCountElement = document.getElementById("right-count");
 
-		// Update right count display
-		if (data.right_count && data.right_count > 0) {
-			rightCountElement.textContent = `(+ ${data.right_count} times I was just "right")`;
+		// Extract pattern counts (filter out total_messages)
+		const patterns = Object.entries(data).filter(([key]) => key !== 'total_messages');
+
+		// Primary count is "absolutely" if it exists, otherwise first pattern
+		const primaryPattern = patterns.find(([key]) => key === 'absolutely') || patterns[0];
+		const primaryCount = primaryPattern ? primaryPattern[1] : 0;
+
+		// Build secondary patterns text (all except primary)
+		const secondaryPatterns = patterns.filter(([key]) => key !== (primaryPattern ? primaryPattern[0] : null));
+		if (secondaryPatterns.length > 0 && secondaryPatterns.some(([, count]) => count > 0)) {
+			const secondaryText = secondaryPatterns
+				.filter(([, count]) => count > 0)
+				.map(([key, count]) => `${count} × "${key}"`)
+				.join(', ');
+			rightCountElement.textContent = `(+ ${secondaryText})`;
 			rightCountElement.style.display = "block";
 		} else {
 			rightCountElement.style.display = "none";
 		}
 
-		if (animate && data.count > 0) {
+		if (animate && primaryCount > 0) {
 			// Show count - 1 first
-			countElement.textContent = data.count - 1;
+			countElement.textContent = primaryCount - 1;
 
 			// Fade in the subtitle
 			subtitleElement.style.transition = "opacity 0.5s ease-in";
@@ -31,7 +43,7 @@ async function fetchToday(animate = false) {
 			setTimeout(() => {
 				countElement.style.transform = "scale(1.3)";
 				countElement.style.color = "#e63946";
-				countElement.textContent = data.count;
+				countElement.textContent = primaryCount;
 
 				// Reset the scale
 				setTimeout(() => {
@@ -39,7 +51,7 @@ async function fetchToday(animate = false) {
 				}, 300);
 			}, 1000);
 		} else {
-			countElement.textContent = data.count;
+			countElement.textContent = primaryCount;
 			// Fade in for non-animated load
 			subtitleElement.style.transition = "opacity 0.5s ease-in";
 			subtitleElement.style.opacity = "1";
@@ -62,12 +74,14 @@ async function fetchHistory() {
 			// Fetch today's count to add to the chart
 			const todayRes = await fetch("/api/today");
 			const todayData = await todayRes.json();
-			history.push({
-				day: today,
-				count: todayData.count || 0,
-				right_count: todayData.right_count || 0,
-				total_messages: todayData.total_messages || 0,
+
+			// Build today's entry with all patterns
+			const todayEntry = { day: today };
+			Object.keys(todayData).forEach(key => {
+				todayEntry[key] = todayData[key] || 0;
 			});
+
+			history.push(todayEntry);
 
 			// Sort by date to ensure chronological order
 			history.sort((a, b) => a.day.localeCompare(b.day));
@@ -105,6 +119,23 @@ function drawChart(history) {
 		? history.slice(-5) 
 		: history;
 
+	// Get all unique patterns from history (excluding total_messages and day)
+	const allPatterns = new Set();
+	displayHistory.forEach(d => {
+		Object.keys(d).forEach(key => {
+			if (key !== 'day' && key !== 'total_messages') {
+				allPatterns.add(key);
+			}
+		});
+	});
+
+	// Capitalize pattern names for display
+	const formatPatternName = (name) => {
+		if (name === 'absolutely') return 'Absolutely right';
+		if (name === 'right') return 'Just right';
+		return name.charAt(0).toUpperCase() + name.slice(1);
+	};
+
 	// Prepare data in the format roughViz expects for stacked bars
 	const data = displayHistory.map((d, i) => {
 		const date = new Date(d.day);
@@ -113,11 +144,12 @@ function drawChart(history) {
 			? date.toLocaleDateString("en-US", { month: "numeric", day: "numeric" })
 			: date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
-		return {
-			date: label,
-			'Absolutely right': d.count,
-			'Just right': d.right_count || 0
-		};
+		const row = { date: label };
+		// Add each pattern dynamically
+		allPatterns.forEach(pattern => {
+			row[formatPatternName(pattern)] = d[pattern] || 0;
+		});
+		return row;
 	});
 
 	if (typeof roughViz === 'undefined') {

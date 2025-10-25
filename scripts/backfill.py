@@ -181,16 +181,18 @@ def main():
             failed = 0
 
             for date in sorted_dates:
-                abs_count = daily_counts["absolutely"].get(date, 0)
-                right_count = daily_counts["right"].get(date, 0)
+                # Collect all pattern counts for this date
+                date_patterns = {name: counts.get(date, 0) for name, counts in daily_counts.items()}
                 total_msgs = total_messages_per_day.get(date, 0)
 
-                if abs_count > 0 or right_count > 0:
-                    upload_text = f"  Uploading {date}: absolutely={abs_count:2d}, right={right_count:2d}, total={total_msgs:3d}..."
+                # Only upload if there are any pattern matches
+                if any(date_patterns.values()):
+                    patterns_summary = ", ".join([f"{name}={count:2d}" for name, count in date_patterns.items()])
+                    upload_text = f"  Uploading {date}: {patterns_summary}, total={total_msgs:3d}..."
                     print(f"{upload_text:<75}", end="")
 
                     result = upload_to_api(
-                        api_url, secret, date, abs_count, right_count, total_msgs
+                        api_url, secret, date, patterns_dict=date_patterns, total_messages=total_msgs
                     )
                     if result == True:
                         print("✓")

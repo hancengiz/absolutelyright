@@ -14,6 +14,95 @@ python3 watcher.py --upload http://localhost:3003 [SECRET]
 
 Backfill asks for confirmation before bulk uploads.
 
+## Scheduling on macOS
+
+Keep the watcher running automatically using launchd.
+
+### 1. Generate a Secret
+
+```bash
+openssl rand -base64 32
+```
+
+Save this secret - you'll need it for both the server and the launch agent.
+
+Set the secret on your server:
+```bash
+export ABSOLUTELYRIGHT_SECRET="[YOUR_SECRET]"
+```
+
+### 2. Create Launch Agent
+
+Create `~/Library/LaunchAgents/com.absolutelyright.watcher.plist`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.absolutelyright.watcher</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>/FULL/PATH/TO/scripts/watcher.py</string>
+        <string>--upload</string>
+        <string>http://your-server.com</string>
+        <string>[YOUR_SECRET]</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/YOUR_USERNAME/Library/Logs/absolutelyright-watcher.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/YOUR_USERNAME/Library/Logs/absolutelyright-watcher.error.log</string>
+</dict>
+</plist>
+```
+
+### 3. Load and Start
+
+```bash
+# Load the launch agent
+launchctl load ~/Library/LaunchAgents/com.absolutelyright.watcher.plist
+
+# Check if running
+launchctl list | grep absolutelyright
+
+# View logs
+tail -f ~/Library/Logs/absolutelyright-watcher.log
+```
+
+### Management Commands
+
+```bash
+# Stop
+launchctl stop com.absolutelyright.watcher
+
+# Start
+launchctl start com.absolutelyright.watcher
+
+# Unload (disable)
+launchctl unload ~/Library/LaunchAgents/com.absolutelyright.watcher.plist
+
+# Reload after editing plist
+launchctl unload ~/Library/LaunchAgents/com.absolutelyright.watcher.plist
+launchctl load ~/Library/LaunchAgents/com.absolutelyright.watcher.plist
+```
+
 ## Patterns
 
 Defined in `claude_counter.py`:

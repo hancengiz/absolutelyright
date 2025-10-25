@@ -245,18 +245,20 @@ def main():
     if api_url:
         today_utc = get_utc_today()
         today_local = datetime.now().strftime("%Y-%m-%d")
-        today_abs = pattern_counts["absolutely"].get(today_utc, 0)
-        today_right = pattern_counts["right"].get(today_utc, 0)
+
+        # Collect all pattern counts for today
+        today_patterns = {name: counts.get(today_utc, 0) for name, counts in pattern_counts.items()}
         today_total = total_messages_counts.get(today_utc, 0)
 
         timezone_note = ""
         if today_utc != today_local:
             timezone_note = f" (UTC {today_utc}, local {today_local})"
 
+        patterns_summary = ", ".join([f"{name}={count}" for name, count in today_patterns.items()])
         print(
-            f"Uploading today's counts{timezone_note}: absolutely={today_abs}, right={today_right}, total_messages={today_total}"
+            f"Uploading today's counts{timezone_note}: {patterns_summary}, total_messages={today_total}"
         )
-        if upload_to_api(api_url, api_secret, today_utc, today_abs, today_right, today_total):
+        if upload_to_api(api_url, api_secret, today_utc, patterns_dict=today_patterns, total_messages=today_total):
             print("  ✓ Upload successful")
         else:
             print("  ✗ Upload failed")
@@ -360,14 +362,14 @@ def main():
                 # Upload to API if configured
                 if api_url:
                     today_utc = get_utc_today()
-                    today_abs = pattern_counts["absolutely"].get(today_utc, 0)
-                    today_right = pattern_counts["right"].get(today_utc, 0)
+                    today_patterns = {name: counts.get(today_utc, 0) for name, counts in pattern_counts.items()}
                     today_total = total_messages_counts.get(today_utc, 0)
                     if upload_to_api(
-                        api_url, api_secret, today_utc, today_abs, today_right, today_total
+                        api_url, api_secret, today_utc, patterns_dict=today_patterns, total_messages=today_total
                     ):
+                        patterns_summary = ", ".join([f"{name}={count}" for name, count in today_patterns.items()])
                         print(
-                            f"  ✓ Uploaded to API: absolutely={today_abs}, right={today_right}, total_messages={today_total}"
+                            f"  ✓ Uploaded to API: {patterns_summary}, total_messages={today_total}"
                         )
 
             time.sleep(int(os.environ.get("CHECK_INTERVAL", "2")))

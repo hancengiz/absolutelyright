@@ -51,5 +51,6 @@ target/
 # Project-specific files
 pageviews.log
 counts.db
+logs/
 
 scripts/__pycache__/
