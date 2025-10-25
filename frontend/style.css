@@ -325,6 +325,34 @@ footer a:hover {
 	transform: rotate(-5deg) scale(1.1);
 }
 
+.top-link {
+	position: absolute;
+	top: 1rem;
+	right: 1rem;
+	font-size: clamp(0.8rem, 2vw, 0.9rem);
+	color: #6b7280;
+	z-index: 100;
+}
+
+.top-link a {
+	color: #e63946;
+	text-decoration: none;
+	font-weight: 700;
+	transition: transform 0.2s;
+	display: inline-block;
+}
+
+.top-link a:hover {
+	transform: rotate(-5deg) scale(1.1);
+}
+
+/* Mobile styles for top link */
+@media (max-width: 600px) {
+	.top-link {
+		font-size: 0.75rem;
+	}
+}
+
 .wiggle {
 	display: inline-block;
 	color: #9ca3af;

@@ -6,6 +6,14 @@ const CHART_ANNOTATIONS = [
 // Display configuration (loaded from config file)
 let DISPLAY_CONFIG = null;
 
+// Track which patterns are active in the chart
+let activePatterns = {
+	absolutely: true,
+	right: true,
+	perfect: false,
+	excellent: false
+};
+
 async function loadDisplayConfig() {
 	try {
 		const res = await fetch("/display_config.json");
@@ -49,6 +57,12 @@ function generateLegend() {
 	patterns.forEach((pattern, index) => {
 		const legendItem = document.createElement('span');
 		legendItem.className = 'legend-item';
+		legendItem.style.cursor = 'pointer';
+
+		// Add disabled class if pattern is not active
+		if (!activePatterns[pattern]) {
+			legendItem.classList.add('disabled');
+		}
 
 		const legendColor = document.createElement('span');
 		legendColor.className = 'legend-color';
@@ -58,6 +72,23 @@ function generateLegend() {
 
 		legendItem.appendChild(legendColor);
 		legendItem.appendChild(document.createTextNode(' ' + label));
+
+		// Add click handler to toggle pattern visibility
+		legendItem.addEventListener('click', () => {
+			activePatterns[pattern] = !activePatterns[pattern];
+
+			// Update legend visual state
+			if (activePatterns[pattern]) {
+				legendItem.classList.remove('disabled');
+			} else {
+				legendItem.classList.add('disabled');
+			}
+
+			// Redraw chart with new active patterns
+			if (currentHistory.length > 0) {
+				drawChart(currentHistory);
+			}
+		});
 
 		legendContainer.appendChild(legendItem);
 	});
@@ -218,13 +249,19 @@ function drawChart(history) {
 	const configLabels = DISPLAY_CONFIG?.chart?.labels || {};
 	const configColors = DISPLAY_CONFIG?.chart?.colors || ['coral', 'skyblue', '#FFB84D', '#9D5C63'];
 
+	// Filter to only include active patterns
+	const activePatternsFiltered = configPatterns.filter(pattern => activePatterns[pattern]);
+	const activeColors = configPatterns
+		.map((pattern, index) => activePatterns[pattern] ? configColors[index] : null)
+		.filter(color => color !== null);
+
 	// Format pattern names using config labels
 	const formatPatternName = (name) => {
 		return configLabels[name] || (name.charAt(0).toUpperCase() + name.slice(1));
 	};
 
 	// Prepare data in the format roughViz expects for stacked bars
-	// Only include patterns that are in the display config
+	// Only include active patterns
 	const data = displayHistory.map((d, i) => {
 		const date = new Date(d.day);
 		// Show simplified labels on mobile since we have fewer bars
@@ -233,8 +270,8 @@ function drawChart(history) {
 			: date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
 		const row = { date: label };
-		// Add each pattern from config (in config order)
-		configPatterns.forEach(pattern => {
+		// Add each active pattern from config (in config order)
+		activePatternsFiltered.forEach(pattern => {
 			row[formatPatternName(pattern)] = d[pattern] || 0;
 		});
 		return row;
@@ -251,7 +288,7 @@ function drawChart(history) {
 		labels: 'date',
 		width: width,
 		height: height,
-		highlight: configColors,
+		highlight: activeColors,
 		roughness: 1.5,
 		font: 'Gaegu',
 		xLabel: '',
@@ -278,7 +315,108 @@ function drawChart(history) {
 
 		// Add total messages bars behind the main bars
 		addTotalMessagesBars(chartElement, displayHistory, isMobile, width, height, margin);
+
+		// Enhance tooltips to show pattern names
+		enhanceTooltips(chartElement, displayHistory, activePatternsFiltered, configLabels);
 	}, 100);
+}
+
+function enhanceTooltips(chartElement, displayHistory, activePatterns, labels) {
+	const svg = chartElement.querySelector('svg');
+	if (!svg) return;
+
+	// Ensure chart element is positioned for absolute tooltips
+	chartElement.style.position = 'relative';
+
+	// Create custom tooltip element
+	let customTooltip = chartElement.querySelector('.custom-tooltip');
+	if (!customTooltip) {
+		customTooltip = document.createElement('div');
+		customTooltip.className = 'custom-tooltip';
+		customTooltip.style.cssText = 'position: absolute; padding: 0.75rem; font-size: 0.95rem; opacity: 0; pointer-events: none; font-family: Gaegu, cursive; z-index: 10000; background: white; border: 2px solid #333; border-radius: 6px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); transition: opacity 0.15s;';
+		chartElement.appendChild(customTooltip);
+	}
+
+	// Find all path elements (roughViz uses paths for bars)
+	const paths = Array.from(svg.querySelectorAll('path'));
+
+	// Also try rects as fallback
+	const rects = Array.from(svg.querySelectorAll('rect'));
+
+	const elements = [...paths, ...rects].filter(el => {
+		// Filter out axes and other non-bar elements
+		const fill = el.getAttribute('fill');
+		return fill && fill !== 'none' && !fill.includes('url(');
+	});
+
+	// Group by x position
+	const barGroups = new Map();
+	elements.forEach(el => {
+		const bbox = el.getBBox();
+		const x = Math.round(bbox.x);
+		if (!barGroups.has(x)) {
+			barGroups.set(x, []);
+		}
+		barGroups.get(x).push(el);
+	});
+
+	// For each bar group, add tooltip handlers
+	let groupIndex = 0;
+	barGroups.forEach((bars, x) => {
+		if (groupIndex >= displayHistory.length) return;
+
+		const dayData = displayHistory[groupIndex];
+		groupIndex++;
+
+		bars.forEach(el => {
+			el.style.cursor = 'pointer';
+
+			el.addEventListener('mouseenter', (e) => {
+				// Build tooltip content with pattern breakdown
+				const date = new Date(dayData.day);
+				const dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+				let tooltipHTML = `<div style="font-weight: bold; margin-bottom: 0.5rem; color: #1f2937;">${dateStr}</div>`;
+
+				activePatterns.forEach(pattern => {
+					const count = dayData[pattern] || 0;
+					const label = labels[pattern] || (pattern.charAt(0).toUpperCase() + pattern.slice(1));
+					if (count > 0) {
+						tooltipHTML += `<div style="margin: 0.25rem 0;"><b>${label}:</b> ${count}</div>`;
+					}
+				});
+
+				// Add total messages
+				const totalMessages = dayData.total_messages || 0;
+				if (totalMessages > 0) {
+					tooltipHTML += `<div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb; color: #6b7280;"><b>Total messages:</b> ${totalMessages}</div>`;
+				}
+
+				customTooltip.innerHTML = tooltipHTML;
+				customTooltip.style.opacity = '1';
+				customTooltip.style.display = 'block';
+
+				const chartRect = chartElement.getBoundingClientRect();
+				customTooltip.style.left = (e.clientX - chartRect.left + 10) + 'px';
+				customTooltip.style.top = (e.clientY - chartRect.top - 10) + 'px';
+			});
+
+			el.addEventListener('mousemove', (e) => {
+				const chartRect = chartElement.getBoundingClientRect();
+				customTooltip.style.left = (e.clientX - chartRect.left + 10) + 'px';
+				customTooltip.style.top = (e.clientY - chartRect.top - 10) + 'px';
+			});
+
+			el.addEventListener('mouseleave', () => {
+				customTooltip.style.opacity = '0';
+				setTimeout(() => {
+					if (customTooltip.style.opacity === '0') {
+						customTooltip.style.display = 'none';
+					}
+				}, 200);
+			});
+		});
+	});
 }
 
 function addTotalMessagesBars(chartElement, displayHistory, isMobile, width, height, margin) {
