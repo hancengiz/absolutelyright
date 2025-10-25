@@ -81,8 +81,8 @@ This code powers the [https://cc.cengizhan.com/](https://cc.cengizhan.com/) webs
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/absolutelyright.git
-cd absolutelyright
+git clone https://github.com/hancengiz/absolutelyright-claude-code.git
+cd absolutelyright-claude-code
 
 # Create virtual environment (recommended)
 python3 -m venv venv
