@@ -1,0 +1,21 @@
+{
+  "title": {
+    "primary_pattern": "absolutely",
+    "text_template": "Claude Code said it {count} times today",
+    "show_this_week": true
+  },
+  "subtitle": {
+    "show_pattern": "right",
+    "text_template": "(+ {count} times I was just \"right\")"
+  },
+  "chart": {
+    "patterns": ["absolutely", "right", "perfect", "excellent"],
+    "labels": {
+      "absolutely": "Absolutely right",
+      "right": "Just right",
+      "perfect": "Perfect",
+      "excellent": "Excellent"
+    },
+    "colors": ["coral", "skyblue", "#FFB84D", "#9D5C63"]
+  }
+}

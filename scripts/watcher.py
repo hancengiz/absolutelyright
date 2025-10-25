@@ -187,8 +187,8 @@ def main():
     """Main watcher loop"""
     ensure_data_dir()
 
-    # Check for upload parameters from command line
-    api_url = None
+    # Use config server URL by default, allow command line override
+    api_url = SERVER_URL
     api_secret = None
 
     for i, arg in enumerate(sys.argv):
@@ -197,6 +197,8 @@ def main():
             if i + 2 < len(sys.argv) and not sys.argv[i + 2].startswith("--"):
                 api_secret = sys.argv[i + 2]
             break
+        elif arg == "--secret" and i + 1 < len(sys.argv):
+            api_secret = sys.argv[i + 1]
 
     print("Claude Pattern Watcher")
     print("=" * 50)

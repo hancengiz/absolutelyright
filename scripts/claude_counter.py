@@ -12,23 +12,19 @@ CLAUDE_PROJECTS_BASE = os.environ.get(
 )
 DATA_DIR = os.path.expanduser("~/.absolutelyright")
 
-# Get script directory for logging
+# Get script directory for logging and config
 SCRIPT_DIR = Path(__file__).parent
 LOG_DIR = SCRIPT_DIR.parent / "logs"
 LOG_DIR.mkdir(exist_ok=True)
 UPLOAD_LOG_FILE = LOG_DIR / "uploads.log"
 
-PATTERNS = {
-    "absolutely": r"You(?:'re| are) absolutely right",
-    "right": r"You(?:'re| are) right",
-    "perfect": r"Perfect!",
-    "excellent": r"Excellent!",
-}
+# Load patterns and server URL from config
+CONFIG_FILE = SCRIPT_DIR / "patterns_config.json"
+with open(CONFIG_FILE, "r") as f:
+    CONFIG = json.load(f)
 
-# Additional pattern ideas (add to PATTERNS dict to track):
-# "issue": r"I see the issue",
-# "great": r"(?:That's |)great!",
-# "exactly": r"(?:That's |)exactly right"
+PATTERNS = CONFIG["patterns"]
+SERVER_URL = CONFIG.get("server_url", "http://localhost:3003")
 
 
 def log_upload(api_url, data, status, response_text=None, error=None):

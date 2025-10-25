@@ -3,6 +3,31 @@ const CHART_ANNOTATIONS = [
 	{ date: '2025-09-29', label: 'Sonnet 4.5' }
 ];
 
+// Display configuration (loaded from config file)
+let DISPLAY_CONFIG = null;
+
+async function loadDisplayConfig() {
+	try {
+		const res = await fetch("/display_config.json");
+		DISPLAY_CONFIG = await res.json();
+	} catch (error) {
+		console.error("Error loading display config:", error);
+		// Use defaults if config fails to load
+		DISPLAY_CONFIG = {
+			title: { primary_pattern: "absolutely", show_this_week: true },
+			subtitle: { show_pattern: "right" },
+			chart: { patterns: ["absolutely", "right"], colors: ["coral", "skyblue"] }
+		};
+	}
+}
+
+function getWeekStart(date) {
+	const d = new Date(date);
+	const day = d.getDay();
+	const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+	return new Date(d.setDate(diff)).toISOString().split("T")[0];
+}
+
 async function fetchToday(animate = false) {
 	try {
 		const res = await fetch("/api/today");
@@ -10,14 +35,34 @@ async function fetchToday(animate = false) {
 		const countElement = document.getElementById("today-inline");
 		const subtitleElement = document.querySelector(".subtitle");
 		const rightCountElement = document.getElementById("right-count");
+		const weekCountElement = document.getElementById("week-count");
 
-		// Primary count is always "absolutely"
-		const primaryCount = data.absolutely || 0;
+		// Get primary pattern from config
+		const primaryPattern = DISPLAY_CONFIG?.title?.primary_pattern || "absolutely";
+		const primaryCount = data[primaryPattern] || 0;
 
-		// Show only "right" count in subtitle (keep original format)
-		const rightCount = data.right || 0;
-		if (rightCount > 0) {
-			rightCountElement.textContent = `(+ ${rightCount} times I was just "right")`;
+		// Calculate this week's count if enabled
+		if (DISPLAY_CONFIG?.title?.show_this_week && weekCountElement) {
+			const historyRes = await fetch("/api/history");
+			const history = await historyRes.json();
+			const today = new Date().toISOString().split("T")[0];
+			const weekStart = getWeekStart(today);
+
+			const weekCount = history
+				.filter(d => d.day >= weekStart && d.day <= today)
+				.reduce((sum, d) => sum + (d[primaryPattern] || 0), 0);
+
+			weekCountElement.textContent = ` (${weekCount} this week)`;
+			weekCountElement.style.display = "inline";
+		}
+
+		// Show subtitle pattern count from config
+		const subtitlePattern = DISPLAY_CONFIG?.subtitle?.show_pattern || "right";
+		const subtitleCount = data[subtitlePattern] || 0;
+		const subtitleTemplate = DISPLAY_CONFIG?.subtitle?.text_template || `(+ {count} times I was just "${subtitlePattern}")`;
+
+		if (subtitleCount > 0) {
+			rightCountElement.textContent = subtitleTemplate.replace('{count}', subtitleCount);
 			rightCountElement.style.display = "block";
 		} else {
 			rightCountElement.style.display = "none";
@@ -121,14 +166,18 @@ function drawChart(history) {
 		});
 	});
 
-	// Capitalize pattern names for display
+	// Get pattern labels and colors from config
+	const configPatterns = DISPLAY_CONFIG?.chart?.patterns || Array.from(allPatterns);
+	const configLabels = DISPLAY_CONFIG?.chart?.labels || {};
+	const configColors = DISPLAY_CONFIG?.chart?.colors || ['coral', 'skyblue', '#FFB84D', '#9D5C63'];
+
+	// Format pattern names using config labels
 	const formatPatternName = (name) => {
-		if (name === 'absolutely') return 'Absolutely right';
-		if (name === 'right') return 'Just right';
-		return name.charAt(0).toUpperCase() + name.slice(1);
+		return configLabels[name] || (name.charAt(0).toUpperCase() + name.slice(1));
 	};
 
 	// Prepare data in the format roughViz expects for stacked bars
+	// Only include patterns that are in the display config
 	const data = displayHistory.map((d, i) => {
 		const date = new Date(d.day);
 		// Show simplified labels on mobile since we have fewer bars
@@ -137,8 +186,8 @@ function drawChart(history) {
 			: date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
 		const row = { date: label };
-		// Add each pattern dynamically
-		allPatterns.forEach(pattern => {
+		// Add each pattern from config (in config order)
+		configPatterns.forEach(pattern => {
 			row[formatPatternName(pattern)] = d[pattern] || 0;
 		});
 		return row;
@@ -148,9 +197,6 @@ function drawChart(history) {
 		console.error('roughViz library not loaded!');
 		return;
 	}
-	
-	// Define colors for all possible patterns (will use only as many as needed)
-	const colors = ['coral', 'skyblue', '#FFB84D', '#9D5C63', '#7FB685', '#E6A5C1'];
 
 	new roughViz.StackedBar({
 		element: '#chart-container',
@@ -158,7 +204,7 @@ function drawChart(history) {
 		labels: 'date',
 		width: width,
 		height: height,
-		highlight: colors,
+		highlight: configColors,
 		roughness: 1.5,
 		font: 'Gaegu',
 		xLabel: '',
@@ -463,7 +509,10 @@ roughScript.onload = () => {
 	// Then load roughViz library
 	const script = document.createElement('script');
 	script.src = 'https://unpkg.com/rough-viz@2.0.5';
-	script.onload = () => {
+	script.onload = async () => {
+		// Load display config first
+		await loadDisplayConfig();
+
 		// Initial load with animation
 		fetchToday(true);
 		fetchHistory().then(() => {

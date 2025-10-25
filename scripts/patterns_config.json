@@ -1,0 +1,9 @@
+{
+  "server_url": "https://cc.cengizhan.com",
+  "patterns": {
+    "absolutely": "You(?:'re| are) absolutely right",
+    "right": "You(?:'re| are) right",
+    "perfect": "Perfect!",
+    "excellent": "Excellent!"
+  }
+}

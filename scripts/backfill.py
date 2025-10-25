@@ -75,8 +75,8 @@ def main():
     print("Claude Pattern Counter Backfill")
     print("=" * 50)
 
-    # Check for upload parameters
-    api_url = None
+    # Use config server URL by default, allow command line override
+    api_url = SERVER_URL if "--upload" in sys.argv else None
     secret = None
 
     for i, arg in enumerate(sys.argv):
@@ -87,6 +87,8 @@ def main():
         elif arg == "--upload" and i + 1 < len(sys.argv):
             api_url = sys.argv[i + 1]
             break
+        elif arg == "--secret" and i + 1 < len(sys.argv):
+            secret = sys.argv[i + 1]
 
     # Show current settings
     print(f"Projects directory: {CLAUDE_PROJECTS_BASE}")
