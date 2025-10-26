@@ -21,6 +21,7 @@ app = FastAPI(title="Absolutely Right API")
 # Pydantic models for API
 class SetRequest(BaseModel):
     day: str
+    workstation_id: str  # NEW: Required workstation identifier
     # Legacy fields for backward compatibility
     count: Optional[int] = None
     right_count: Optional[int] = None
@@ -42,29 +43,33 @@ async def startup_event():
 
 @app.get("/api/today")
 async def get_today(session: AsyncSession = Depends(get_session)) -> JSONResponse:
-    """Get today's counts for all patterns."""
+    """Get today's counts aggregated across all workstations."""
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-    # Fetch today's record
+    # Fetch ALL workstation records for today
     result = await session.execute(
         select(DayCount).where(DayCount.day == today)
     )
-    day_count = result.scalar_one_or_none()
+    day_counts = result.scalars().all()
 
-    # Build response
-    response_data: Dict[str, int] = {}
+    # Aggregate across workstations
+    from collections import defaultdict
+    aggregated_patterns: Dict[str, int] = defaultdict(int)
+    aggregated_total = 0
 
-    if day_count:
+    for record in day_counts:
         # Parse patterns JSON
         try:
-            patterns = json.loads(day_count.patterns)
-            response_data.update(patterns)
+            patterns = json.loads(record.patterns)
+            for pattern, count in patterns.items():
+                aggregated_patterns[pattern] += count
         except json.JSONDecodeError:
             pass
-        response_data["total_messages"] = day_count.total_messages or 0
-    else:
-        # No data for today
-        response_data["total_messages"] = 0
+        aggregated_total += record.total_messages or 0
+
+    # Build response (workstation_id hidden from API)
+    response_data = dict(aggregated_patterns)
+    response_data["total_messages"] = aggregated_total
 
     # Cache for 1 minute
     return JSONResponse(
@@ -75,26 +80,33 @@ async def get_today(session: AsyncSession = Depends(get_session)) -> JSONRespons
 
 @app.get("/api/history")
 async def get_history(session: AsyncSession = Depends(get_session)) -> JSONResponse:
-    """Get historical counts for all days."""
+    """Get historical counts aggregated across all workstations."""
     # Fetch all records ordered by day
     result = await session.execute(
         select(DayCount).order_by(DayCount.day)
     )
-    day_counts = result.scalars().all()
+    all_records = result.scalars().all()
 
-    # Build response
-    history = []
-    for day_count in day_counts:
-        day_data = {"day": day_count.day}
+    # Group by day, aggregate across workstations
+    from collections import defaultdict
+    by_day: Dict[str, Dict] = defaultdict(lambda: {"patterns": defaultdict(int), "total": 0})
 
+    for record in all_records:
         # Parse patterns JSON
         try:
-            patterns = json.loads(day_count.patterns)
-            day_data.update(patterns)
+            patterns = json.loads(record.patterns)
+            for pattern, count in patterns.items():
+                by_day[record.day]["patterns"][pattern] += count
         except json.JSONDecodeError:
             pass
+        by_day[record.day]["total"] += record.total_messages or 0
 
-        day_data["total_messages"] = day_count.total_messages or 0
+    # Build response (workstation_id hidden from API)
+    history = []
+    for day in sorted(by_day.keys()):
+        day_data = {"day": day}
+        day_data.update(by_day[day]["patterns"])
+        day_data["total_messages"] = by_day[day]["total"]
         history.append(day_data)
 
     # Cache for 5 minutes
@@ -141,20 +153,24 @@ async def set_day(
     patterns_json = json.dumps(patterns_map)
     total_messages = payload.total_messages or 0
 
-    # Check if record exists
+    # Check if record exists for this workstation
     result = await session.execute(
-        select(DayCount).where(DayCount.day == payload.day)
+        select(DayCount).where(
+            DayCount.day == payload.day,
+            DayCount.workstation_id == payload.workstation_id
+        )
     )
     existing = result.scalar_one_or_none()
 
     if existing:
-        # Update existing record
+        # Update existing record for this workstation
         existing.patterns = patterns_json
         existing.total_messages = total_messages
     else:
-        # Create new record
+        # Create new record for this workstation
         new_record = DayCount(
             day=payload.day,
+            workstation_id=payload.workstation_id,
             patterns=patterns_json,
             total_messages=total_messages
         )

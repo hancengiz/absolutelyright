@@ -3,6 +3,9 @@ import os
 import json
 import re
 import urllib.request
+import socket
+import subprocess
+import platform
 from datetime import datetime, timezone
 from pathlib import Path
 from collections import defaultdict
@@ -25,6 +28,33 @@ with open(CONFIG_FILE, "r") as f:
 
 PATTERNS = CONFIG["patterns"]
 SERVER_URL = CONFIG.get("server_url", "http://localhost:3003")
+
+
+def get_workstation_id():
+    """Get a stable, friendly workstation identifier"""
+    # Check for environment variable first (allows manual override)
+    if os.environ.get("WORKSTATION_ID"):
+        return os.environ.get("WORKSTATION_ID")
+
+    # On macOS, use LocalHostName (clean, stable, user-friendly)
+    if platform.system() == "Darwin":
+        try:
+            result = subprocess.run(
+                ["scutil", "--get", "LocalHostName"],
+                capture_output=True,
+                text=True,
+                timeout=1
+            )
+            if result.returncode == 0:
+                return result.stdout.strip()
+        except:
+            pass
+
+    # Fallback to socket.gethostname() for other platforms
+    return socket.gethostname()
+
+
+WORKSTATION_ID = get_workstation_id()
 
 
 def log_upload(api_url, data, status, response_text=None, error=None):
@@ -65,7 +95,10 @@ def upload_to_api(api_url, secret, date_str, patterns_dict=None, total_messages=
         return False
 
     try:
-        data = {"day": date_str}
+        data = {
+            "day": date_str,
+            "workstation_id": WORKSTATION_ID  # NEW: Include workstation identifier
+        }
 
         # New format: patterns as flat fields
         if patterns_dict:

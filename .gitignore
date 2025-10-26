@@ -67,3 +67,5 @@ ENV/
 *.egg-info/
 dist/
 build/
+counts_backup_*.db
+counts_backup_*.json
