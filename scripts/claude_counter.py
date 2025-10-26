@@ -6,6 +6,8 @@ import urllib.request
 import socket
 import subprocess
 import platform
+import logging
+from logging.handlers import TimedRotatingFileHandler
 from datetime import datetime, timezone
 from pathlib import Path
 from collections import defaultdict
@@ -20,6 +22,19 @@ SCRIPT_DIR = Path(__file__).parent
 LOG_DIR = SCRIPT_DIR.parent / "logs"
 LOG_DIR.mkdir(exist_ok=True)
 UPLOAD_LOG_FILE = LOG_DIR / "uploads.log"
+
+# Set up rotating logger for uploads
+upload_logger = logging.getLogger("uploads")
+upload_logger.setLevel(logging.INFO)
+upload_handler = TimedRotatingFileHandler(
+    UPLOAD_LOG_FILE,
+    when="midnight",
+    interval=1,
+    backupCount=7,  # Keep 7 days of logs
+    encoding="utf-8"
+)
+upload_handler.setFormatter(logging.Formatter('%(message)s'))
+upload_logger.addHandler(upload_handler)
 
 # Load patterns and server URL from config
 CONFIG_FILE = SCRIPT_DIR / "patterns_config.json"
@@ -58,7 +73,7 @@ WORKSTATION_ID = get_workstation_id()
 
 
 def log_upload(api_url, data, status, response_text=None, error=None):
-    """Log upload attempts to file"""
+    """Log upload attempts to file with automatic daily rotation"""
     try:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         log_entry = {
@@ -72,8 +87,7 @@ def log_upload(api_url, data, status, response_text=None, error=None):
         if error:
             log_entry["error"] = str(error)
 
-        with open(UPLOAD_LOG_FILE, "a") as f:
-            f.write(json.dumps(log_entry) + "\n")
+        upload_logger.info(json.dumps(log_entry))
     except Exception as e:
         # Don't fail if logging fails
         print(f"  Warning: Could not write to log: {e}")
