@@ -1,0 +1,46 @@
+name: Backup Database
+
+on:
+  schedule:
+    # Run daily at midnight UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fetch data from API
+        run: |
+          # Create backups directory if it doesn't exist
+          mkdir -p backups
+
+          # Fetch data from API and save to single file
+          # Git will track the history of changes
+          curl -s https://cc.cengizhan.com/api/by-workstation | jq '.' > backups/database.json
+
+          echo "Backup updated: backups/database.json"
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit and push changes
+        run: |
+          git add backups/
+
+          # Only commit if there are changes
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Automated backup: $(date +%Y-%m-%d)"
+            git push
+            echo "Backup committed and pushed"
+          fi

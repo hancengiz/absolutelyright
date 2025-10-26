@@ -1,0 +1,31 @@
+[
+    {
+        "workstation_id": "cengizs-MacBook-Pro",
+        "history": [
+            {
+                "day": "2025-10-22",
+                "total_messages": 1057,
+                "absolutely": 4,
+                "right": 4,
+                "perfect": 47,
+                "excellent": 12
+            },
+            {
+                "day": "2025-10-25",
+                "total_messages": 3023,
+                "absolutely": 5,
+                "right": 4,
+                "perfect": 113,
+                "excellent": 24
+            },
+            {
+                "day": "2025-10-26",
+                "total_messages": 1663,
+                "absolutely": 4,
+                "right": 5,
+                "perfect": 79,
+                "excellent": 19
+            }
+        ]
+    }
+]
