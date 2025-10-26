@@ -116,6 +116,48 @@ async def get_history(session: AsyncSession = Depends(get_session)) -> JSONRespo
     )
 
 
+@app.get("/api/by-workstation")
+async def get_by_workstation(session: AsyncSession = Depends(get_session)) -> JSONResponse:
+    """Get data grouped by workstation for debugging/inspection."""
+    # Fetch all records ordered by day and workstation
+    result = await session.execute(
+        select(DayCount).order_by(DayCount.day, DayCount.workstation_id)
+    )
+    all_records = result.scalars().all()
+
+    # Group by workstation, then by day
+    from collections import defaultdict
+    by_workstation: Dict[str, list] = defaultdict(list)
+
+    for record in all_records:
+        # Parse patterns JSON
+        try:
+            patterns = json.loads(record.patterns)
+        except json.JSONDecodeError:
+            patterns = {}
+
+        day_data = {
+            "day": record.day,
+            "total_messages": record.total_messages or 0
+        }
+        day_data.update(patterns)
+        by_workstation[record.workstation_id].append(day_data)
+
+    # Build response with workstation_id exposed
+    response = []
+    for workstation_id in sorted(by_workstation.keys()):
+        response.append({
+            "workstation_id": workstation_id,
+            "history": by_workstation[workstation_id]
+        })
+
+    # Cache for 1 minute
+    return JSONResponse(
+        content=response,
+        headers={"Cache-Control": "public, max-age=60"}
+    )
+
+
 @app.post("/api/set")
 async def set_day(
     payload: SetRequest,

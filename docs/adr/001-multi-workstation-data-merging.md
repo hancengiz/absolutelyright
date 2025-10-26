@@ -194,6 +194,43 @@ async def get_history(session: AsyncSession):
     return JSONResponse(content=history, headers={"Cache-Control": "public, max-age=300"})
 ```
 
+**GET /api/by-workstation** (new - per-workstation view):
+
+```python
+@app.get("/api/by-workstation")
+async def get_by_workstation(session: AsyncSession):
+    """Get data grouped by workstation for debugging/inspection."""
+    result = await session.execute(select(DayCount).order_by(DayCount.day, DayCount.workstation_id))
+    all_records = result.scalars().all()
+
+    # Group by workstation, then by day
+    by_workstation = defaultdict(lambda: [])
+
+    for record in all_records:
+        patterns = json.loads(record.patterns)
+        day_data = {
+            "day": record.day,
+            "total_messages": record.total_messages
+        }
+        day_data.update(patterns)
+        by_workstation[record.workstation_id].append(day_data)
+
+    # Build response with workstation_id exposed
+    response = []
+    for workstation_id in sorted(by_workstation.keys()):
+        response.append({
+            "workstation_id": workstation_id,
+            "history": by_workstation[workstation_id]
+        })
+
+    return JSONResponse(content=response, headers={"Cache-Control": "public, max-age=60"})
+```
+
+This endpoint is useful for:
+- **Debugging**: See which workstation contributed which data
+- **Verification**: Ensure all machines are uploading correctly
+- **Inspection**: Understand data distribution across workstations
+
 #### Client Script Changes
 
 Update `scripts/claude_counter.py`:
