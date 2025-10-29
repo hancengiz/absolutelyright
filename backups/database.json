@@ -262,6 +262,14 @@
         "right": 7,
         "perfect": 70,
         "excellent": 7
+      },
+      {
+        "day": "2025-10-28",
+        "total_messages": 1321,
+        "absolutely": 8,
+        "right": 10,
+        "perfect": 93,
+        "excellent": 19
       }
     ]
   },
