@@ -270,6 +270,14 @@
         "right": 10,
         "perfect": 93,
         "excellent": 19
+      },
+      {
+        "day": "2025-10-29",
+        "total_messages": 991,
+        "absolutely": 2,
+        "right": 4,
+        "perfect": 62,
+        "excellent": 14
       }
     ]
   },
@@ -299,6 +307,14 @@
         "right": 7,
         "perfect": 129,
         "excellent": 28
+      },
+      {
+        "day": "2025-10-29",
+        "total_messages": 178,
+        "absolutely": 2,
+        "right": 1,
+        "perfect": 8,
+        "excellent": 0
       }
     ]
   }
