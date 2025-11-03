@@ -302,6 +302,14 @@
         "right": 0,
         "perfect": 5,
         "excellent": 0
+      },
+      {
+        "day": "2025-11-02",
+        "total_messages": 2047,
+        "absolutely": 19,
+        "right": 2,
+        "perfect": 122,
+        "excellent": 30
       }
     ]
   },
