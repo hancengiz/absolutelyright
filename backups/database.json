@@ -310,6 +310,14 @@
         "right": 2,
         "perfect": 122,
         "excellent": 30
+      },
+      {
+        "day": "2025-11-03",
+        "total_messages": 703,
+        "absolutely": 1,
+        "right": 1,
+        "perfect": 33,
+        "excellent": 3
       }
     ]
   },
@@ -347,6 +355,14 @@
         "right": 1,
         "perfect": 8,
         "excellent": 0
+      },
+      {
+        "day": "2025-11-03",
+        "total_messages": 271,
+        "absolutely": 0,
+        "right": 0,
+        "perfect": 9,
+        "excellent": 4
       }
     ]
   }
