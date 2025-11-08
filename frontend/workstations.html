@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Workstations View - You're absolutely right!</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    .workstation-filter {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin: 20px 0;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.5);
+      border: 2px solid #333;
+      border-radius: 5px;
+    }
+
+    .workstation-filter-title {
+      width: 100%;
+      font-weight: 700;
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+
+    .workstation-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      padding: 5px 10px;
+      border-radius: 3px;
+      transition: background-color 0.2s;
+    }
+
+    .workstation-checkbox:hover {
+      background-color: rgba(107, 114, 128, 0.1);
+    }
+
+    .workstation-checkbox input[type="checkbox"] {
+      cursor: pointer;
+      width: 18px;
+      height: 18px;
+    }
+
+    .workstation-label {
+      font-size: 16px;
+      user-select: none;
+    }
+
+    .workstation-count {
+      font-size: 14px;
+      color: #6b7280;
+      margin-left: 5px;
+    }
+
+    .nav-links {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 15px;
+    }
+
+    .nav-links a {
+      color: #333;
+      text-decoration: none;
+      padding: 5px 10px;
+      border: 1px solid #333;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.8);
+      transition: background-color 0.2s;
+    }
+
+    .nav-links a:hover {
+      background-color: rgba(107, 114, 128, 0.2);
+    }
+
+    .nav-links a.active {
+      background-color: #333;
+      color: white;
+    }
+
+    #no-data-message {
+      text-align: center;
+      padding: 40px;
+      font-size: 18px;
+      color: #6b7280;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="nav-links">
+    <a href="/">Combined View</a>
+    <a href="/2" class="active">By Workstation</a>
+  </div>
+  <div class="top-link">
+    <a href="https://www.cengizhan.com/p/claude-claude-dont-be-meanhow-right" target="_blank">cengizhan.com</a>
+  </div>
+  <main>
+    <div class="graph-container">
+      <h1>Workstation <span class="highlight">breakdown!</span></h1>
+      <p class="subtitle" style="opacity: 0">View counts by individual workstation</p>
+
+      <div class="workstation-filter" id="workstation-filter">
+        <div class="workstation-filter-title">Filter by Workstation:</div>
+        <!-- Checkboxes will be dynamically added here -->
+      </div>
+
+      <section class="chart-section">
+        <div id="chart"></div>
+        <div id="no-data-message">No data to display. Select at least one workstation.</div>
+        <div class="chart-legend" id="chart-legend">
+          <!-- Legend items will be dynamically generated from config -->
+          <span class="legend-item">
+            <span class="legend-color" style="background: #6b7280; opacity: 0.7; border-style: dashed;"></span>
+            Total assistant messages
+            <span class="info-icon-wrapper">
+              <span class="info-icon">?</span>
+              <span class="info-tooltip">Uses square root scale to show both small and large values clearly</span>
+            </span>
+          </span>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer>
+    <p><a href="https://github.com/hancengiz/absolutelyright-claude-code" target="_blank">github.com/hancengiz/absolutelyright-claude-code</a> • forked from <a href="https://github.com/yoavf/absolutelyright" target="_blank">@yoavf</a></p>
+  </footer>
+  <script type="module" src="workstations.js"></script>
+</body>
+</html>

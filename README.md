@@ -8,7 +8,7 @@ This code powers the [https://cc.cengizhan.com/](https://cc.cengizhan.com/) webs
 
 ---
 
-![Claude Code Graph](frontend/assets/claude-code-graph.png)
+[![Claude Code Graph](frontend/assets/claude-code-graph.png)](https://cc.cengizhan.com)
 
 ## Project History
 

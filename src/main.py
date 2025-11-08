@@ -158,6 +158,13 @@ async def get_by_workstation(session: AsyncSession = Depends(get_session)) -> JS
     )
 
 
+@app.get("/2")
+async def workstations_view():
+    """Serve the workstations view page."""
+    from fastapi.responses import FileResponse
+    return FileResponse("frontend/workstations.html")
+
+
 @app.post("/api/set")
 async def set_day(
     payload: SetRequest,
