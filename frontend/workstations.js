@@ -161,7 +161,7 @@ function updateChart() {
   const datasets = [];
   const labels = processedData.map(d => {
     // Parse YYYY-MM-DD format correctly
-    const [year, month, day] = d.day.split('-').map(Number);
+    const [, month, day] = d.day.split('-').map(Number);
     return `${month}/${day}`;
   });
 
