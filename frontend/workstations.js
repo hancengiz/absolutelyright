@@ -99,7 +99,6 @@ function processSelectedData() {
     if (!selectedWorkstations.has(ws.workstation_id)) return;
 
     ws.history.forEach(day => {
-      const key = `${day.day}-${ws.workstation_id}`;
       if (!dayMap.has(day.day)) {
         dayMap.set(day.day, new Map());
       }

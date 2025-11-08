@@ -144,7 +144,7 @@
       script.onload = () => {
         // Load our workstations script after libraries are ready
         const workstationsScript = document.createElement('script');
-        workstationsScript.src = 'workstations.js';
+        workstationsScript.src = 'workstations.js?v=2';  // Cache bust
         document.body.appendChild(workstationsScript);
       };
       document.head.appendChild(script);
