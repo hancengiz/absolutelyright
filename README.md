@@ -541,15 +541,22 @@ python3 scripts/backup_db.py
 # 4. Commit and push to git (if data changed)
 ```
 
-#### From Local Server
+#### Get Fresh Data to Local Environment
 
-If you're running locally and want to backup your local database:
+To pull the latest production data to your local environment for testing:
 
 ```bash
-# Backup from local server
-python3 scripts/backup_db.py --server http://localhost:3003
+# 1. Download latest backup from production
+python3 scripts/backup_db.py
 
-# This creates/updates backups/database.json from your local data
+# 2. Restore it to your local database
+python3 scripts/restore_backup.py backups/database.json
+
+# 3. Run local server
+python3 src/main.py
+
+# Now your local environment has all production data
+# Visit http://localhost:3003 to see it
 ```
 
 ### Restoring Database from Backup
