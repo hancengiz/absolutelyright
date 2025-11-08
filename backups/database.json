@@ -1,433 +1,433 @@
 [
-    {
-        "workstation_id": "Cengizs-MacBook-Pro-2",
-        "history": [
-            {
-                "day": "2025-10-11",
-                "total_messages": 1266,
-                "absolutely": 6,
-                "right": 6,
-                "perfect": 122,
-                "excellent": 27
-            },
-            {
-                "day": "2025-10-12",
-                "total_messages": 4483,
-                "absolutely": 18,
-                "right": 20,
-                "perfect": 212,
-                "excellent": 36
-            },
-            {
-                "day": "2025-10-13",
-                "total_messages": 1811,
-                "absolutely": 7,
-                "right": 1,
-                "perfect": 83,
-                "excellent": 10
-            },
-            {
-                "day": "2025-10-14",
-                "total_messages": 2425,
-                "absolutely": 18,
-                "right": 5,
-                "perfect": 94,
-                "excellent": 7
-            },
-            {
-                "day": "2025-10-17",
-                "total_messages": 645,
-                "absolutely": 4,
-                "right": 4,
-                "perfect": 51,
-                "excellent": 1
-            },
-            {
-                "day": "2025-10-18",
-                "total_messages": 1321,
-                "absolutely": 6,
-                "right": 3,
-                "perfect": 128,
-                "excellent": 25
-            },
-            {
-                "day": "2025-10-19",
-                "total_messages": 3450,
-                "absolutely": 20,
-                "right": 6,
-                "perfect": 203,
-                "excellent": 38
-            },
-            {
-                "day": "2025-10-26",
-                "total_messages": 75,
-                "absolutely": 0,
-                "right": 1,
-                "perfect": 2,
-                "excellent": 0
-            }
-        ]
-    },
-    {
-        "workstation_id": "EPTRANKW0055",
-        "history": [
-            {
-                "day": "2025-09-27",
-                "total_messages": 3426,
-                "absolutely": 38,
-                "right": 19,
-                "perfect": 127,
-                "excellent": 33
-            },
-            {
-                "day": "2025-09-28",
-                "total_messages": 3756,
-                "absolutely": 37,
-                "right": 9,
-                "perfect": 237,
-                "excellent": 46
-            },
-            {
-                "day": "2025-09-29",
-                "total_messages": 2202,
-                "absolutely": 10,
-                "right": 6,
-                "perfect": 153,
-                "excellent": 27
-            },
-            {
-                "day": "2025-09-30",
-                "total_messages": 2566,
-                "absolutely": 20,
-                "right": 8,
-                "perfect": 108,
-                "excellent": 15
-            },
-            {
-                "day": "2025-10-01",
-                "total_messages": 2513,
-                "absolutely": 14,
-                "right": 10,
-                "perfect": 114,
-                "excellent": 23
-            },
-            {
-                "day": "2025-10-02",
-                "total_messages": 2657,
-                "absolutely": 11,
-                "right": 8,
-                "perfect": 38,
-                "excellent": 4
-            },
-            {
-                "day": "2025-10-03",
-                "total_messages": 449,
-                "absolutely": 0,
-                "right": 3,
-                "perfect": 9,
-                "excellent": 2
-            },
-            {
-                "day": "2025-10-04",
-                "total_messages": 3339,
-                "absolutely": 16,
-                "right": 7,
-                "perfect": 65,
-                "excellent": 12
-            },
-            {
-                "day": "2025-10-05",
-                "total_messages": 73,
-                "absolutely": 0,
-                "right": 1,
-                "perfect": 4,
-                "excellent": 2
-            },
-            {
-                "day": "2025-10-06",
-                "total_messages": 278,
-                "absolutely": 1,
-                "right": 1,
-                "perfect": 4,
-                "excellent": 0
-            },
-            {
-                "day": "2025-10-07",
-                "total_messages": 208,
-                "absolutely": 1,
-                "right": 0,
-                "perfect": 6,
-                "excellent": 0
-            },
-            {
-                "day": "2025-10-08",
-                "total_messages": 1241,
-                "absolutely": 9,
-                "right": 0,
-                "perfect": 39,
-                "excellent": 6
-            },
-            {
-                "day": "2025-10-09",
-                "total_messages": 1714,
-                "absolutely": 9,
-                "right": 5,
-                "perfect": 31,
-                "excellent": 6
-            },
-            {
-                "day": "2025-10-14",
-                "total_messages": 330,
-                "absolutely": 0,
-                "right": 0,
-                "perfect": 11,
-                "excellent": 3
-            },
-            {
-                "day": "2025-10-17",
-                "total_messages": 938,
-                "absolutely": 7,
-                "right": 6,
-                "perfect": 2,
-                "excellent": 0
-            },
-            {
-                "day": "2025-10-18",
-                "total_messages": 416,
-                "absolutely": 0,
-                "right": 0,
-                "perfect": 6,
-                "excellent": 1
-            },
-            {
-                "day": "2025-10-20",
-                "total_messages": 2484,
-                "absolutely": 13,
-                "right": 30,
-                "perfect": 196,
-                "excellent": 29
-            },
-            {
-                "day": "2025-10-21",
-                "total_messages": 920,
-                "absolutely": 11,
-                "right": 2,
-                "perfect": 25,
-                "excellent": 7
-            },
-            {
-                "day": "2025-10-22",
-                "total_messages": 616,
-                "absolutely": 3,
-                "right": 2,
-                "perfect": 41,
-                "excellent": 6
-            },
-            {
-                "day": "2025-10-23",
-                "total_messages": 393,
-                "absolutely": 4,
-                "right": 0,
-                "perfect": 24,
-                "excellent": 9
-            },
-            {
-                "day": "2025-10-24",
-                "total_messages": 548,
-                "absolutely": 1,
-                "right": 0,
-                "perfect": 52,
-                "excellent": 5
-            },
-            {
-                "day": "2025-10-25",
-                "total_messages": 375,
-                "absolutely": 2,
-                "right": 2,
-                "perfect": 41,
-                "excellent": 3
-            },
-            {
-                "day": "2025-10-26",
-                "total_messages": 71,
-                "absolutely": 0,
-                "right": 0,
-                "perfect": 9,
-                "excellent": 4
-            },
-            {
-                "day": "2025-10-27",
-                "total_messages": 1044,
-                "absolutely": 5,
-                "right": 7,
-                "perfect": 70,
-                "excellent": 7
-            },
-            {
-                "day": "2025-10-28",
-                "total_messages": 1321,
-                "absolutely": 8,
-                "right": 10,
-                "perfect": 93,
-                "excellent": 19
-            },
-            {
-                "day": "2025-10-29",
-                "total_messages": 991,
-                "absolutely": 2,
-                "right": 4,
-                "perfect": 62,
-                "excellent": 14
-            },
-            {
-                "day": "2025-10-30",
-                "total_messages": 97,
-                "absolutely": 1,
-                "right": 0,
-                "perfect": 10,
-                "excellent": 2
-            },
-            {
-                "day": "2025-10-31",
-                "total_messages": 564,
-                "absolutely": 1,
-                "right": 4,
-                "perfect": 27,
-                "excellent": 7
-            },
-            {
-                "day": "2025-11-01",
-                "total_messages": 120,
-                "absolutely": 0,
-                "right": 0,
-                "perfect": 5,
-                "excellent": 0
-            },
-            {
-                "day": "2025-11-02",
-                "total_messages": 2047,
-                "absolutely": 19,
-                "right": 2,
-                "perfect": 122,
-                "excellent": 30
-            },
-            {
-                "day": "2025-11-03",
-                "total_messages": 703,
-                "absolutely": 1,
-                "right": 1,
-                "perfect": 33,
-                "excellent": 3
-            },
-            {
-                "day": "2025-11-04",
-                "total_messages": 1403,
-                "absolutely": 15,
-                "right": 4,
-                "perfect": 56,
-                "excellent": 18
-            },
-            {
-                "day": "2025-11-05",
-                "total_messages": 154,
-                "absolutely": 0,
-                "right": 0,
-                "perfect": 4,
-                "excellent": 1
-            },
-            {
-                "day": "2025-11-06",
-                "total_messages": 239,
-                "absolutely": 0,
-                "right": 0,
-                "perfect": 8,
-                "excellent": 0
-            },
-            {
-                "day": "2025-11-07",
-                "total_messages": 1061,
-                "absolutely": 5,
-                "right": 0,
-                "perfect": 29,
-                "excellent": 4
-            }
-        ]
-    },
-    {
-        "workstation_id": "cengizs-MacBook-Pro",
-        "history": [
-            {
-                "day": "2025-10-22",
-                "total_messages": 1057,
-                "absolutely": 4,
-                "right": 4,
-                "perfect": 47,
-                "excellent": 12
-            },
-            {
-                "day": "2025-10-25",
-                "total_messages": 3023,
-                "absolutely": 5,
-                "right": 4,
-                "perfect": 113,
-                "excellent": 24
-            },
-            {
-                "day": "2025-10-26",
-                "total_messages": 2522,
-                "absolutely": 12,
-                "right": 7,
-                "perfect": 129,
-                "excellent": 28
-            },
-            {
-                "day": "2025-10-29",
-                "total_messages": 178,
-                "absolutely": 2,
-                "right": 1,
-                "perfect": 8,
-                "excellent": 0
-            },
-            {
-                "day": "2025-11-03",
-                "total_messages": 271,
-                "absolutely": 0,
-                "right": 0,
-                "perfect": 9,
-                "excellent": 4
-            },
-            {
-                "day": "2025-11-04",
-                "total_messages": 969,
-                "absolutely": 4,
-                "right": 1,
-                "perfect": 54,
-                "excellent": 5
-            },
-            {
-                "day": "2025-11-06",
-                "total_messages": 773,
-                "absolutely": 11,
-                "right": 2,
-                "perfect": 34,
-                "excellent": 3
-            },
-            {
-                "day": "2025-11-07",
-                "total_messages": 80,
-                "absolutely": 2,
-                "right": 0,
-                "perfect": 3,
-                "excellent": 1
-            },
-            {
-                "day": "2025-11-08",
-                "total_messages": 200,
-                "absolutely": 1,
-                "right": 0,
-                "perfect": 8,
-                "excellent": 0
-            }
-        ]
-    }
+  {
+    "workstation_id": "Cengizs-MacBook-Pro-2",
+    "history": [
+      {
+        "day": "2025-10-11",
+        "total_messages": 1266,
+        "absolutely": 6,
+        "right": 6,
+        "perfect": 122,
+        "excellent": 27
+      },
+      {
+        "day": "2025-10-12",
+        "total_messages": 4483,
+        "absolutely": 18,
+        "right": 20,
+        "perfect": 212,
+        "excellent": 36
+      },
+      {
+        "day": "2025-10-13",
+        "total_messages": 1811,
+        "absolutely": 7,
+        "right": 1,
+        "perfect": 83,
+        "excellent": 10
+      },
+      {
+        "day": "2025-10-14",
+        "total_messages": 2425,
+        "absolutely": 18,
+        "right": 5,
+        "perfect": 94,
+        "excellent": 7
+      },
+      {
+        "day": "2025-10-17",
+        "total_messages": 645,
+        "absolutely": 4,
+        "right": 4,
+        "perfect": 51,
+        "excellent": 1
+      },
+      {
+        "day": "2025-10-18",
+        "total_messages": 1321,
+        "absolutely": 6,
+        "right": 3,
+        "perfect": 128,
+        "excellent": 25
+      },
+      {
+        "day": "2025-10-19",
+        "total_messages": 3450,
+        "absolutely": 20,
+        "right": 6,
+        "perfect": 203,
+        "excellent": 38
+      },
+      {
+        "day": "2025-10-26",
+        "total_messages": 75,
+        "absolutely": 0,
+        "right": 1,
+        "perfect": 2,
+        "excellent": 0
+      }
+    ]
+  },
+  {
+    "workstation_id": "EPTRANKW0055",
+    "history": [
+      {
+        "day": "2025-09-27",
+        "total_messages": 3426,
+        "absolutely": 38,
+        "right": 19,
+        "perfect": 127,
+        "excellent": 33
+      },
+      {
+        "day": "2025-09-28",
+        "total_messages": 3756,
+        "absolutely": 37,
+        "right": 9,
+        "perfect": 237,
+        "excellent": 46
+      },
+      {
+        "day": "2025-09-29",
+        "total_messages": 2202,
+        "absolutely": 10,
+        "right": 6,
+        "perfect": 153,
+        "excellent": 27
+      },
+      {
+        "day": "2025-09-30",
+        "total_messages": 2566,
+        "absolutely": 20,
+        "right": 8,
+        "perfect": 108,
+        "excellent": 15
+      },
+      {
+        "day": "2025-10-01",
+        "total_messages": 2513,
+        "absolutely": 14,
+        "right": 10,
+        "perfect": 114,
+        "excellent": 23
+      },
+      {
+        "day": "2025-10-02",
+        "total_messages": 2657,
+        "absolutely": 11,
+        "right": 8,
+        "perfect": 38,
+        "excellent": 4
+      },
+      {
+        "day": "2025-10-03",
+        "total_messages": 449,
+        "absolutely": 0,
+        "right": 3,
+        "perfect": 9,
+        "excellent": 2
+      },
+      {
+        "day": "2025-10-04",
+        "total_messages": 3339,
+        "absolutely": 16,
+        "right": 7,
+        "perfect": 65,
+        "excellent": 12
+      },
+      {
+        "day": "2025-10-05",
+        "total_messages": 73,
+        "absolutely": 0,
+        "right": 1,
+        "perfect": 4,
+        "excellent": 2
+      },
+      {
+        "day": "2025-10-06",
+        "total_messages": 278,
+        "absolutely": 1,
+        "right": 1,
+        "perfect": 4,
+        "excellent": 0
+      },
+      {
+        "day": "2025-10-07",
+        "total_messages": 208,
+        "absolutely": 1,
+        "right": 0,
+        "perfect": 6,
+        "excellent": 0
+      },
+      {
+        "day": "2025-10-08",
+        "total_messages": 1241,
+        "absolutely": 9,
+        "right": 0,
+        "perfect": 39,
+        "excellent": 6
+      },
+      {
+        "day": "2025-10-09",
+        "total_messages": 1714,
+        "absolutely": 9,
+        "right": 5,
+        "perfect": 31,
+        "excellent": 6
+      },
+      {
+        "day": "2025-10-14",
+        "total_messages": 330,
+        "absolutely": 0,
+        "right": 0,
+        "perfect": 11,
+        "excellent": 3
+      },
+      {
+        "day": "2025-10-17",
+        "total_messages": 938,
+        "absolutely": 7,
+        "right": 6,
+        "perfect": 2,
+        "excellent": 0
+      },
+      {
+        "day": "2025-10-18",
+        "total_messages": 416,
+        "absolutely": 0,
+        "right": 0,
+        "perfect": 6,
+        "excellent": 1
+      },
+      {
+        "day": "2025-10-20",
+        "total_messages": 2484,
+        "absolutely": 13,
+        "right": 30,
+        "perfect": 196,
+        "excellent": 29
+      },
+      {
+        "day": "2025-10-21",
+        "total_messages": 920,
+        "absolutely": 11,
+        "right": 2,
+        "perfect": 25,
+        "excellent": 7
+      },
+      {
+        "day": "2025-10-22",
+        "total_messages": 616,
+        "absolutely": 3,
+        "right": 2,
+        "perfect": 41,
+        "excellent": 6
+      },
+      {
+        "day": "2025-10-23",
+        "total_messages": 393,
+        "absolutely": 4,
+        "right": 0,
+        "perfect": 24,
+        "excellent": 9
+      },
+      {
+        "day": "2025-10-24",
+        "total_messages": 548,
+        "absolutely": 1,
+        "right": 0,
+        "perfect": 52,
+        "excellent": 5
+      },
+      {
+        "day": "2025-10-25",
+        "total_messages": 375,
+        "absolutely": 2,
+        "right": 2,
+        "perfect": 41,
+        "excellent": 3
+      },
+      {
+        "day": "2025-10-26",
+        "total_messages": 71,
+        "absolutely": 0,
+        "right": 0,
+        "perfect": 9,
+        "excellent": 4
+      },
+      {
+        "day": "2025-10-27",
+        "total_messages": 1044,
+        "absolutely": 5,
+        "right": 7,
+        "perfect": 70,
+        "excellent": 7
+      },
+      {
+        "day": "2025-10-28",
+        "total_messages": 1321,
+        "absolutely": 8,
+        "right": 10,
+        "perfect": 93,
+        "excellent": 19
+      },
+      {
+        "day": "2025-10-29",
+        "total_messages": 991,
+        "absolutely": 2,
+        "right": 4,
+        "perfect": 62,
+        "excellent": 14
+      },
+      {
+        "day": "2025-10-30",
+        "total_messages": 97,
+        "absolutely": 1,
+        "right": 0,
+        "perfect": 10,
+        "excellent": 2
+      },
+      {
+        "day": "2025-10-31",
+        "total_messages": 564,
+        "absolutely": 1,
+        "right": 4,
+        "perfect": 27,
+        "excellent": 7
+      },
+      {
+        "day": "2025-11-01",
+        "total_messages": 120,
+        "absolutely": 0,
+        "right": 0,
+        "perfect": 5,
+        "excellent": 0
+      },
+      {
+        "day": "2025-11-02",
+        "total_messages": 2047,
+        "absolutely": 19,
+        "right": 2,
+        "perfect": 122,
+        "excellent": 30
+      },
+      {
+        "day": "2025-11-03",
+        "total_messages": 703,
+        "absolutely": 1,
+        "right": 1,
+        "perfect": 33,
+        "excellent": 3
+      },
+      {
+        "day": "2025-11-04",
+        "total_messages": 1403,
+        "absolutely": 15,
+        "right": 4,
+        "perfect": 56,
+        "excellent": 18
+      },
+      {
+        "day": "2025-11-05",
+        "total_messages": 154,
+        "absolutely": 0,
+        "right": 0,
+        "perfect": 4,
+        "excellent": 1
+      },
+      {
+        "day": "2025-11-06",
+        "total_messages": 239,
+        "absolutely": 0,
+        "right": 0,
+        "perfect": 8,
+        "excellent": 0
+      },
+      {
+        "day": "2025-11-07",
+        "total_messages": 1061,
+        "absolutely": 5,
+        "right": 0,
+        "perfect": 29,
+        "excellent": 4
+      }
+    ]
+  },
+  {
+    "workstation_id": "cengizs-MacBook-Pro",
+    "history": [
+      {
+        "day": "2025-10-22",
+        "total_messages": 1057,
+        "absolutely": 4,
+        "right": 4,
+        "perfect": 47,
+        "excellent": 12
+      },
+      {
+        "day": "2025-10-25",
+        "total_messages": 3023,
+        "absolutely": 5,
+        "right": 4,
+        "perfect": 113,
+        "excellent": 24
+      },
+      {
+        "day": "2025-10-26",
+        "total_messages": 2522,
+        "absolutely": 12,
+        "right": 7,
+        "perfect": 129,
+        "excellent": 28
+      },
+      {
+        "day": "2025-10-29",
+        "total_messages": 178,
+        "absolutely": 2,
+        "right": 1,
+        "perfect": 8,
+        "excellent": 0
+      },
+      {
+        "day": "2025-11-03",
+        "total_messages": 271,
+        "absolutely": 0,
+        "right": 0,
+        "perfect": 9,
+        "excellent": 4
+      },
+      {
+        "day": "2025-11-04",
+        "total_messages": 969,
+        "absolutely": 4,
+        "right": 1,
+        "perfect": 54,
+        "excellent": 5
+      },
+      {
+        "day": "2025-11-06",
+        "total_messages": 773,
+        "absolutely": 11,
+        "right": 2,
+        "perfect": 34,
+        "excellent": 3
+      },
+      {
+        "day": "2025-11-07",
+        "total_messages": 80,
+        "absolutely": 2,
+        "right": 0,
+        "perfect": 3,
+        "excellent": 1
+      },
+      {
+        "day": "2025-11-08",
+        "total_messages": 620,
+        "absolutely": 4,
+        "right": 3,
+        "perfect": 35,
+        "excellent": 3
+      }
+    ]
+  }
 ]
