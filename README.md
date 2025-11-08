@@ -143,32 +143,113 @@ This script will:
 
 For continuous monitoring of new Claude Code conversations:
 
+#### Option A: Manual Setup (Recommended)
+
+1. **Generate a secret key:**
 ```bash
-# Generate a secret key
 openssl rand -base64 32
-
-# Set it as an environment variable (add to your ~/.zshrc or ~/.bashrc)
-export ABSOLUTELYRIGHT_SECRET="YOUR_GENERATED_SECRET"
-
-# Run the installation script
-./scripts/install-watcher.sh "YOUR_GENERATED_SECRET"
+# Save this secret for use in the next steps
 ```
 
-This will:
-- Create a macOS LaunchAgent
-- Start the watcher service automatically
-- Monitor Claude Code conversations in real-time
-- Auto-upload new counts to your server
-
-**Verify it's running:**
+2. **Create LaunchAgent plist file:**
 ```bash
-# Check service status
+# Create the LaunchAgents directory if it doesn't exist
+mkdir -p ~/Library/LaunchAgents
+
+# Create the plist file
+cat > ~/Library/LaunchAgents/com.cengizhan.absolutelyright.watcher.plist << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.cengizhan.absolutelyright.watcher</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>/Users/YOUR_USERNAME/code/absolutelyright-claude-code/scripts/watcher.py</string>
+        <string>--secret</string>
+        <string>YOUR_SECRET_HERE</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/YOUR_USERNAME/code/absolutelyright-claude-code</string>
+    <key>StandardOutPath</key>
+    <string>/Users/YOUR_USERNAME/code/absolutelyright-claude-code/logs/watcher.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/YOUR_USERNAME/code/absolutelyright-claude-code/logs/watcher.error.log</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>
+EOF
+```
+
+3. **Edit the plist file to add your details:**
+```bash
+# Replace YOUR_USERNAME with your actual username
+sed -i '' "s/YOUR_USERNAME/$(whoami)/g" ~/Library/LaunchAgents/com.cengizhan.absolutelyright.watcher.plist
+
+# Replace YOUR_SECRET_HERE with your generated secret (manually edit the file)
+nano ~/Library/LaunchAgents/com.cengizhan.absolutelyright.watcher.plist
+```
+
+4. **Load and start the LaunchAgent:**
+```bash
+launchctl load ~/Library/LaunchAgents/com.cengizhan.absolutelyright.watcher.plist
+```
+
+#### Option B: Quick Start (One-Time Run)
+
+For testing or one-time use:
+```bash
+# Run in background with nohup
+nohup python3 scripts/watcher.py --secret "YOUR_SECRET" >> logs/watcher.log 2>&1 &
+```
+
+**Note:** This will not survive reboots. Use the LaunchAgent method for persistent monitoring.
+
+#### Verify It's Running
+
+```bash
+# Check if LaunchAgent is loaded
 launchctl list | grep absolutelyright
 
-# View logs
-tail -f ~/Library/Logs/absolutelyright-watcher.log
-tail -f ~/Library/Logs/absolutelyright-watcher.error.log
+# Check if process is running
+ps aux | grep watcher.py | grep -v grep
+
+# View logs (logs rotate daily, keeping 7 days)
+tail -f logs/watcher.log
+tail -f logs/watcher.error.log
+
+# View upload history
+tail -f logs/uploads.log
 ```
+
+#### Managing the Service
+
+```bash
+# Stop the watcher
+launchctl unload ~/Library/LaunchAgents/com.cengizhan.absolutelyright.watcher.plist
+
+# Start the watcher
+launchctl load ~/Library/LaunchAgents/com.cengizhan.absolutelyright.watcher.plist
+
+# Restart the watcher
+launchctl unload ~/Library/LaunchAgents/com.cengizhan.absolutelyright.watcher.plist && \
+launchctl load ~/Library/LaunchAgents/com.cengizhan.absolutelyright.watcher.plist
+```
+
+**What the watcher does:**
+- Monitors Claude Code conversations every 2 seconds
+- Detects pattern matches in real-time
+- Uploads counts to your server with the secret key
+- Runs automatically on system startup
+- Restarts automatically if it crashes
+- Logs rotate daily at midnight (keeps 7 days)
 
 ### Step 6: Deploy to Railway (Optional)
 
@@ -236,7 +317,7 @@ absolutelyright/
 ## API Reference
 
 ### `GET /api/today`
-Returns today's pattern counts.
+Returns today's pattern counts (aggregated across all workstations).
 
 **Response:**
 ```json
@@ -252,7 +333,7 @@ Returns today's pattern counts.
 **Cache:** 1 minute
 
 ### `GET /api/history`
-Returns all historical data, ordered by date.
+Returns all historical data, ordered by date (aggregated across all workstations).
 
 **Response:**
 ```json
@@ -271,13 +352,45 @@ Returns all historical data, ordered by date.
 
 **Cache:** 5 minutes
 
+### `GET /api/by-workstation`
+Returns data grouped by workstation for debugging and inspection.
+
+**Response:**
+```json
+[
+  {
+    "workstation_id": "cengizs-MacBook-Pro",
+    "history": [
+      {
+        "day": "2025-10-22",
+        "absolutely": 4,
+        "right": 4,
+        "perfect": 47,
+        "excellent": 12,
+        "total_messages": 1057
+      },
+      ...
+    ]
+  },
+  ...
+]
+```
+
+**Cache:** 1 minute
+
+**Use cases:**
+- Debug which workstation contributed data
+- Verify all machines are uploading correctly
+- Inspect data distribution across workstations
+
 ### `POST /api/set`
-Upload counts for a specific day.
+Upload counts for a specific day and workstation.
 
 **Request:**
 ```json
 {
   "day": "2025-10-25",
+  "workstation_id": "cengizs-MacBook-Pro",
   "absolutely": 3,
   "right": 2,
   "perfect": 75,
@@ -294,7 +407,9 @@ Upload counts for a specific day.
 
 **Notes:**
 - Requires `ABSOLUTELYRIGHT_SECRET` environment variable to be set
+- Requires `workstation_id` field (automatically added by scripts)
 - Supports dynamic pattern fields (any numeric field becomes a pattern)
+- Each workstation's data is stored separately and aggregated on read
 - Legacy fields `count` and `right_count` are supported for backward compatibility
 
 ---
@@ -317,9 +432,11 @@ pylint src/
 
 ```sql
 CREATE TABLE day_counts (
-    day VARCHAR PRIMARY KEY,        -- Date in YYYY-MM-DD format
-    patterns TEXT NOT NULL,         -- JSON object with pattern counts
-    total_messages INTEGER          -- Total assistant messages that day
+    day VARCHAR NOT NULL,           -- Date in YYYY-MM-DD format
+    workstation_id VARCHAR NOT NULL, -- Machine identifier (e.g., "cengizs-MacBook-Pro")
+    patterns TEXT NOT NULL,          -- JSON object with pattern counts
+    total_messages INTEGER,          -- Total assistant messages that day
+    PRIMARY KEY (day, workstation_id) -- Composite key for multi-workstation support
 );
 ```
 
@@ -332,6 +449,12 @@ CREATE TABLE day_counts (
   "excellent": 12
 }
 ```
+
+**Multi-Workstation Support:**
+- Each workstation's data is stored separately
+- API endpoints (`/api/today`, `/api/history`) automatically aggregate across all workstations
+- Workstation ID is automatically detected (macOS LocalHostName or hostname)
+- No data conflicts when running from multiple machines
 
 ### Environment Variables
 
