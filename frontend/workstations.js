@@ -1,4 +1,4 @@
-import './roughviz.min.js';
+// RoughViz is included inline in the HTML via CDN or embedded in the page
 
 // Global configuration
 const API_BASE = '';  // Will use relative paths

@@ -1,8 +1,9 @@
 """FastAPI backend for Absolutely Right tracking application."""
 import os
 import json
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional
+from typing import Dict, Optional
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -14,8 +15,20 @@ from src.database import init_db, get_session
 from src.models import DayCount
 
 
-# Initialize FastAPI app
-app = FastAPI(title="Absolutely Right API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan context manager for startup and shutdown events."""
+    # Startup
+    await init_db()
+    print(f"Database initialized")
+    print(f"Server starting on port {os.getenv('PORT', 3003)}")
+    yield
+    # Shutdown (if needed)
+    print("Server shutting down")
+
+
+# Initialize FastAPI app with lifespan
+app = FastAPI(title="Absolutely Right API", lifespan=lifespan)
 
 
 # Pydantic models for API
@@ -31,14 +44,6 @@ class SetRequest(BaseModel):
 
     class Config:
         extra = "allow"  # Allow additional fields for patterns
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize database on startup."""
-    await init_db()
-    print(f"Database initialized")
-    print(f"Server starting on port {os.getenv('PORT', 3003)}")
 
 
 @app.get("/api/today")
@@ -190,10 +195,10 @@ async def set_day(
         patterns_map["right"] = payload.right_count
 
     # New format: extract numeric values from additional fields
-    payload_dict = payload.dict()
+    payload_dict = payload.model_dump()
     for key, value in payload_dict.items():
         # Skip known non-pattern fields
-        if key in ["day", "total_messages", "secret", "count", "right_count"]:
+        if key in ["day", "total_messages", "secret", "count", "right_count", "workstation_id"]:
             continue
         # Include numeric values as patterns
         if isinstance(value, int):
