@@ -7,7 +7,6 @@ const PATTERN_COLORS = {
   right: '#3b82f6',       // blue
   perfect: '#10b981',     // green
   excellent: '#f59e0b',   // amber
-  // Add more patterns here as needed
 };
 
 const PATTERN_LABELS = {
@@ -20,17 +19,6 @@ const PATTERN_LABELS = {
 let workstationData = [];
 let selectedWorkstations = new Set();
 let visiblePatterns = new Set(['absolutely', 'right', 'perfect', 'excellent']);
-
-// Load patterns from config or use defaults
-async function loadPatternConfig() {
-  try {
-    // Try to get pattern config from the API (if available)
-    // For now, we'll use the defaults defined above
-    console.log('Using default pattern configuration');
-  } catch (error) {
-    console.error('Failed to load pattern config:', error);
-  }
-}
 
 // Fetch data from API
 async function fetchWorkstationData() {
@@ -54,12 +42,7 @@ function createWorkstationFilters(data) {
   filterContainer.innerHTML = '';
   filterContainer.appendChild(title);
 
-  console.log('=== Creating Workstation Filters ===');
-  console.log('Number of workstations:', data.length);
-
   data.forEach(workstation => {
-    console.log(`Workstation: "${workstation.workstation_id}" (type: ${typeof workstation.workstation_id})`);
-
     const totalCount = workstation.history.reduce((sum, day) => {
       return sum + (day.absolutely || 0) + (day.right || 0) +
              (day.perfect || 0) + (day.excellent || 0);
@@ -95,50 +78,46 @@ function createWorkstationFilters(data) {
   });
 }
 
-// Process data for the selected workstations
+// Process data for the selected workstations - aggregate by day
 function processSelectedData() {
-  console.log('=== processSelectedData() ===');
-  console.log('workstationData:', workstationData.map(ws => ws.workstation_id));
-  console.log('selectedWorkstations:', Array.from(selectedWorkstations));
-
   // Aggregate data by day for selected workstations
   const dayMap = new Map();
 
   workstationData.forEach(ws => {
-    const isSelected = selectedWorkstations.has(ws.workstation_id);
-    console.log(`Workstation "${ws.workstation_id}" selected? ${isSelected}`);
+    if (!selectedWorkstations.has(ws.workstation_id)) return;
 
-    if (!isSelected) return;
-
-    console.log(`  Processing ${ws.history.length} days for "${ws.workstation_id}"`);
     ws.history.forEach(day => {
       if (!dayMap.has(day.day)) {
-        dayMap.set(day.day, new Map());
+        dayMap.set(day.day, {
+          day: day.day,
+          absolutely: 0,
+          right: 0,
+          perfect: 0,
+          excellent: 0,
+          total_messages: 0
+        });
       }
-      dayMap.get(day.day).set(ws.workstation_id, day);
+
+      const aggregated = dayMap.get(day.day);
+      aggregated.absolutely += (day.absolutely || 0);
+      aggregated.right += (day.right || 0);
+      aggregated.perfect += (day.perfect || 0);
+      aggregated.excellent += (day.excellent || 0);
+      aggregated.total_messages += (day.total_messages || 0);
     });
   });
 
   // Convert to array and sort by date
-  const processedData = [];
-  for (const [day, workstations] of dayMap.entries()) {
-    const dayData = { day, workstations: {} };
-    for (const [wsId, data] of workstations.entries()) {
-      dayData.workstations[wsId] = data;
-    }
-    processedData.push(dayData);
-  }
+  const processedData = Array.from(dayMap.values())
+    .sort((a, b) => a.day.localeCompare(b.day));
 
-  return processedData.sort((a, b) => a.day.localeCompare(b.day));
+  return processedData;
 }
 
-// Update the chart
+// Update the chart - using the SAME approach as main page
 function updateChart() {
-  console.log('updateChart() called');
   const chartContainer = document.getElementById('chart');
   const noDataMessage = document.getElementById('no-data-message');
-
-  console.log(`Selected workstations: ${Array.from(selectedWorkstations).join(', ')}`);
 
   if (selectedWorkstations.size === 0) {
     chartContainer.style.display = 'none';
@@ -150,76 +129,20 @@ function updateChart() {
   noDataMessage.style.display = 'none';
 
   const processedData = processSelectedData();
-  console.log(`Processed data length: ${processedData.length}`);
 
   if (processedData.length === 0) {
     chartContainer.innerHTML = '<p>No data available for selected workstations</p>';
     return;
   }
 
-  // Prepare data for roughViz - one series per workstation per pattern
-  const datasets = [];
-  const labels = processedData.map(d => {
-    // Parse YYYY-MM-DD format correctly
-    const [, month, day] = d.day.split('-').map(Number);
-    return `${month}/${day}`;
-  });
-
-  console.log('Labels created:', labels.slice(0, 10));
-
-  // Create a dataset for each workstation-pattern combination
-  selectedWorkstations.forEach(wsId => {
-    Object.keys(PATTERN_COLORS).forEach(pattern => {
-      if (!visiblePatterns.has(pattern)) return;
-
-      const data = processedData.map(day => {
-        const wsData = day.workstations[wsId];
-        return wsData ? (wsData[pattern] || 0) : 0;
-      });
-
-      // Only add dataset if it has non-zero values
-      if (data.some(v => v > 0)) {
-        datasets.push({
-          label: `${wsId} - ${PATTERN_LABELS[pattern] || pattern}`,
-          data: data,
-          color: PATTERN_COLORS[pattern] || '#6b7280',
-          workstation: wsId,
-          pattern: pattern
-        });
-      }
-    });
-
-    // Add total messages dataset for each workstation
-    if (visiblePatterns.has('total_messages')) {
-      const data = processedData.map(day => {
-        const wsData = day.workstations[wsId];
-        if (!wsData || !wsData.total_messages) return 0;
-        // Apply square root scale for better visibility
-        return Math.sqrt(wsData.total_messages);
-      });
-
-      if (data.some(v => v > 0)) {
-        datasets.push({
-          label: `${wsId} - Total messages (√scale)`,
-          data: data,
-          color: '#6b7280',
-          strokeDash: [5, 3],
-          workstation: wsId,
-          pattern: 'total_messages'
-        });
-      }
-    }
-  });
-
   // Clear the chart container
   chartContainer.innerHTML = '';
 
-  if (datasets.length === 0) {
-    chartContainer.innerHTML = '<p>No data to display for selected patterns</p>';
-    return;
-  }
+  // Create container div for roughViz
+  const container = document.createElement('div');
+  container.id = 'chart-container';
+  chartContainer.appendChild(container);
 
-  // Create the chart
   try {
     // Check if roughViz is loaded
     if (typeof roughViz === 'undefined') {
@@ -228,40 +151,68 @@ function updateChart() {
       return;
     }
 
-    console.log(`Creating chart with ${datasets.length} datasets and ${labels.length} labels`);
-    console.log('First dataset sample:', datasets[0]);
-    console.log('Labels sample:', labels.slice(0, 5));
+    // Make chart dimensions responsive (same as main page)
+    const isMobile = window.innerWidth <= 600;
+    const containerWidth = Math.min(window.innerWidth - 40, 760);
+    const width = containerWidth;
+    const height = isMobile ? 300 : 350;
+    const margin = isMobile
+      ? { top: 20, right: 10, bottom: 60, left: 40 }
+      : { top: 30, right: 20, bottom: 70, left: 80 };
 
-    const chartConfig = {
-      element: '#chart',
-      data: {
-        labels: labels,
-        values: datasets.map(d => d.data)
-      },
-      colors: datasets.map(d => d.color),
-      strokeDash: datasets.map(d => d.strokeDash || [0]),
-      title: '',
-      width: Math.min(window.innerWidth - 40, 1000),
-      height: 400,
-      roughness: 2.5,
-      strokeWidth: 2,
-      axisStrokeWidth: 1.5,
-      axisRoughness: 1,
+    // Filter to only include active patterns
+    const activePatternsFiltered = Object.keys(PATTERN_COLORS).filter(pattern => visiblePatterns.has(pattern));
+    const activeColors = Object.keys(PATTERN_COLORS)
+      .filter(pattern => visiblePatterns.has(pattern))
+      .map(pattern => PATTERN_COLORS[pattern]);
+
+    // Prepare data in the format roughViz expects for stacked bars (SAME as main page)
+    const data = processedData.map((d) => {
+      const date = new Date(d.day);
+      const label = isMobile
+        ? date.toLocaleDateString("en-US", { month: "numeric", day: "numeric" })
+        : date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+      const row = { date: label };
+      // Add each active pattern
+      activePatternsFiltered.forEach(pattern => {
+        row[PATTERN_LABELS[pattern]] = d[pattern] || 0;
+      });
+      return row;
+    });
+
+    // Create the chart using StackedBar (SAME as main page)
+    new roughViz.StackedBar({
+      element: '#chart-container',
+      data: data,
+      labels: 'date',
+      width: width,
+      height: height,
+      highlight: activeColors,
+      roughness: 1.5,
       font: 'Gaegu',
-      fillWeight: 0.35,
-      margin: { top: 20, right: 20, bottom: 70, left: 70 },
-      interactive: false,
-      legend: false,  // We'll use our custom legend
-      yLabel: 'Count',
-      xLabel: 'Date'
-    };
+      xLabel: '',
+      yLabel: isMobile ? '' : 'Count',
+      interactive: true,
+      tooltipFontSize: '0.95rem',
+      margin: margin,
+      axisFontSize: isMobile ? '10' : '12',
+      axisStrokeWidth: isMobile ? 1 : 1.5,
+      strokeWidth: isMobile ? 1.5 : 2,
+    });
 
-    console.log('Chart config:', chartConfig);
-    new roughViz.Line(chartConfig);
-    console.log('Chart created successfully');
+    // Hide every other x-axis label to reduce crowding (SAME as main page)
+    setTimeout(() => {
+      const xAxisLabels = chartContainer.querySelectorAll('.x-axis text, .xAxis text, svg text');
+      xAxisLabels.forEach((label, i) => {
+        if (i % 2 === 1) {
+          label.style.opacity = '0';
+        }
+      });
+    }, 100);
+
   } catch (error) {
     console.error('Error creating chart:', error);
-    console.error('Error stack:', error.stack);
     chartContainer.innerHTML = '<p>Error creating chart: ' + error.message + '</p>';
   }
 }
@@ -281,25 +232,27 @@ function createPatternLegend() {
     item.style.cursor = 'pointer';
     item.dataset.pattern = pattern;
 
+    if (!visiblePatterns.has(pattern)) {
+      item.classList.add('disabled');
+    }
+
     const colorBox = document.createElement('span');
     colorBox.className = 'legend-color';
     colorBox.style.background = color;
-    if (!visiblePatterns.has(pattern)) {
-      colorBox.style.opacity = '0.3';
-    }
 
     const label = document.createTextNode(PATTERN_LABELS[pattern] || pattern);
 
     item.appendChild(colorBox);
+    item.appendChild(document.createTextNode(' '));
     item.appendChild(label);
 
     item.addEventListener('click', () => {
       if (visiblePatterns.has(pattern)) {
         visiblePatterns.delete(pattern);
-        colorBox.style.opacity = '0.3';
+        item.classList.add('disabled');
       } else {
         visiblePatterns.add(pattern);
-        colorBox.style.opacity = '1';
+        item.classList.remove('disabled');
       }
       updateChart();
     });
@@ -307,27 +260,8 @@ function createPatternLegend() {
     legendContainer.appendChild(item);
   });
 
-  // Add total messages legend
+  // Add total messages legend back
   if (existingTotal) {
-    existingTotal.style.cursor = 'pointer';
-    existingTotal.dataset.pattern = 'total_messages';
-
-    const colorBox = existingTotal.querySelector('.legend-color');
-    if (!visiblePatterns.has('total_messages')) {
-      colorBox.style.opacity = '0.3';
-    }
-
-    existingTotal.addEventListener('click', () => {
-      if (visiblePatterns.has('total_messages')) {
-        visiblePatterns.delete('total_messages');
-        colorBox.style.opacity = '0.3';
-      } else {
-        visiblePatterns.add('total_messages');
-        colorBox.style.opacity = '1';
-      }
-      updateChart();
-    });
-
     legendContainer.appendChild(existingTotal);
   }
 }
@@ -335,7 +269,6 @@ function createPatternLegend() {
 // Initialize
 async function init() {
   console.log('Initializing workstations page...');
-  await loadPatternConfig();
 
   // Fetch data
   workstationData = await fetchWorkstationData();
