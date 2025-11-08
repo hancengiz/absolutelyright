@@ -18,7 +18,8 @@ const PATTERN_LABELS = {
 
 let workstationData = [];
 let selectedWorkstations = new Set();
-let visiblePatterns = new Set(['absolutely', 'right', 'perfect', 'excellent']);
+// Match main page default: only 'absolutely' and 'right' enabled by default
+let visiblePatterns = new Set(['absolutely', 'right']);
 
 // Fetch data from API
 async function fetchWorkstationData() {
