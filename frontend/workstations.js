@@ -54,7 +54,12 @@ function createWorkstationFilters(data) {
   filterContainer.innerHTML = '';
   filterContainer.appendChild(title);
 
+  console.log('=== Creating Workstation Filters ===');
+  console.log('Number of workstations:', data.length);
+
   data.forEach(workstation => {
+    console.log(`Workstation: "${workstation.workstation_id}" (type: ${typeof workstation.workstation_id})`);
+
     const totalCount = workstation.history.reduce((sum, day) => {
       return sum + (day.absolutely || 0) + (day.right || 0) +
              (day.perfect || 0) + (day.excellent || 0);
@@ -92,12 +97,20 @@ function createWorkstationFilters(data) {
 
 // Process data for the selected workstations
 function processSelectedData() {
+  console.log('=== processSelectedData() ===');
+  console.log('workstationData:', workstationData.map(ws => ws.workstation_id));
+  console.log('selectedWorkstations:', Array.from(selectedWorkstations));
+
   // Aggregate data by day for selected workstations
   const dayMap = new Map();
 
   workstationData.forEach(ws => {
-    if (!selectedWorkstations.has(ws.workstation_id)) return;
+    const isSelected = selectedWorkstations.has(ws.workstation_id);
+    console.log(`Workstation "${ws.workstation_id}" selected? ${isSelected}`);
 
+    if (!isSelected) return;
+
+    console.log(`  Processing ${ws.history.length} days for "${ws.workstation_id}"`);
     ws.history.forEach(day => {
       if (!dayMap.has(day.day)) {
         dayMap.set(day.day, new Map());
