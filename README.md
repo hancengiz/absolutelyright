@@ -8,7 +8,7 @@ This code powers the [https://cc.cengizhan.com/](https://cc.cengizhan.com/) webs
 
 ---
 
-<img width="1100" height="1200" alt="screenshot-rocks" src="https://github.com/user-attachments/assets/5464b87b-edb6-460c-b625-d06c33684d9a" />
+![Claude Code Graph](frontend/assets/claude-code-graph.png)
 
 ## Project History
 
