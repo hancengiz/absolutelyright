@@ -518,6 +518,7 @@ The production server at `cc.cengizhan.com` has an automated backup system:
 - **Retention**: Git history preserves all backup versions
 
 **How it works:**
+
 1. Cron job runs `scripts/backup_db.py` every 6 hours
 2. Script fetches data from `/api/by-workstation` endpoint
 3. Saves to `backups/database.json` with timestamp
@@ -568,6 +569,7 @@ python3 scripts/restore_backup.py backups/database.json
 ```
 
 **Example workflow for local testing:**
+
 ```bash
 # 1. Pull latest backup from production
 python3 scripts/backup_db.py
@@ -631,6 +633,7 @@ The backup file (`backups/database.json`) is structured as an array of workstati
 ```
 
 **Benefits of this format:**
+
 - Human-readable (JSON)
 - Version controlled (Git)
 - Easy to inspect and verify
@@ -640,23 +643,27 @@ The backup file (`backups/database.json`) is structured as an array of workstati
 ### Backup Best Practices
 
 1. **Before major changes**: Always create a fresh backup
+
    ```bash
    python3 scripts/backup_db.py
    git commit -m "Backup before database migration"
    ```
 
 2. **Test restores regularly**: Verify backups work
+
    ```bash
    # Test restore to local database
    python3 scripts/restore_backup.py backups/database.json
    ```
 
 3. **Keep git history**: Don't delete old backups from git
+
    - Git preserves all backup versions
    - Can rollback to any point in time
    - Use `git log backups/database.json` to see history
 
 4. **Monitor backup automation**: Check that production backups are running
+
    ```bash
    # Check recent backup commits
    git log --oneline backups/database.json | head -5
@@ -669,6 +676,7 @@ The backup file (`backups/database.json`) is structured as an array of workstati
 ## Contributing
 
 This is a personal fork, but feel free to:
+
 1. Fork this repo for your own tracking
 2. Submit issues for bugs
 3. Create PRs for improvements
