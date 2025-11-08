@@ -160,9 +160,12 @@ function updateChart() {
   // Prepare data for roughViz - one series per workstation per pattern
   const datasets = [];
   const labels = processedData.map(d => {
-    const date = new Date(d.day);
-    return `${date.getMonth() + 1}/${date.getDate()}`;
+    // Parse YYYY-MM-DD format correctly
+    const [year, month, day] = d.day.split('-').map(Number);
+    return `${month}/${day}`;
   });
+
+  console.log('Labels created:', labels.slice(0, 10));
 
   // Create a dataset for each workstation-pattern combination
   selectedWorkstations.forEach(wsId => {
