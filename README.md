@@ -506,6 +506,166 @@ launchctl load ~/Library/LaunchAgents/com.absolutelyright.watcher.plist
 
 ---
 
+## Backup and Restore
+
+### Automated Backup Schedule
+
+The production server at `cc.cengizhan.com` has an automated backup system:
+
+- **Schedule**: Runs every 6 hours (00:00, 06:00, 12:00, 18:00 UTC)
+- **Location**: Backups are committed to the `backups/` directory in the repository
+- **Format**: JSON file (`database.json`) containing all workstation data
+- **Retention**: Git history preserves all backup versions
+
+**How it works:**
+1. Cron job runs `scripts/backup_db.py` every 6 hours
+2. Script fetches data from `/api/by-workstation` endpoint
+3. Saves to `backups/database.json` with timestamp
+4. Auto-commits and pushes to GitHub if data changed
+
+### Creating a Manual Backup
+
+#### From Production Server
+
+To create a fresh backup from the production server:
+
+```bash
+# Pull latest backup from production and save locally
+python3 scripts/backup_db.py
+
+# This will:
+# 1. Fetch data from https://cc.cengizhan.com/api/by-workstation
+# 2. Save to backups/database.json
+# 3. Show statistics (X records from Y workstations)
+# 4. Commit and push to git (if data changed)
+```
+
+#### From Local Server
+
+If you're running locally and want to backup your local database:
+
+```bash
+# Backup from local server
+python3 scripts/backup_db.py --server http://localhost:3003
+
+# This creates/updates backups/database.json from your local data
+```
+
+### Restoring Database from Backup
+
+#### Restore Local Database
+
+To restore your local database from the latest backup (useful for testing with production data):
+
+```bash
+# Restore from the backup file to local database
+python3 scripts/restore_backup.py backups/database.json
+
+# This will:
+# 1. Clear your local counts.db database
+# 2. Import all records from the backup
+# 3. Show statistics (X records imported across Y workstations)
+```
+
+**Example workflow for local testing:**
+```bash
+# 1. Pull latest backup from production
+python3 scripts/backup_db.py
+
+# 2. Restore it to your local database
+python3 scripts/restore_backup.py backups/database.json
+
+# 3. Run local server to test
+python3 src/main.py
+
+# 4. Visit http://localhost:3003 to see production data locally
+```
+
+#### Restore Production Database
+
+**⚠️ WARNING: This will overwrite production data. Use with extreme caution!**
+
+To restore the production database from a backup:
+
+```bash
+# 1. First, create a fresh backup of current production data (safety first!)
+python3 scripts/backup_db.py
+
+# 2. Restore production from a specific backup file
+python3 scripts/restore_backup.py backups/database.json --upload https://cc.cengizhan.com --secret YOUR_SECRET
+
+# This will:
+# 1. Read the backup file
+# 2. Upload each record to production via POST /api/set
+# 3. Require ABSOLUTELYRIGHT_SECRET for authentication
+```
+
+**Recovery scenarios:**
+
+1. **Database corruption**: Restore from latest `backups/database.json`
+2. **Accidental data loss**: Find backup from git history before the incident
+3. **Migration to new server**: Export backup, deploy new server, restore backup
+
+### Backup File Format
+
+The backup file (`backups/database.json`) is structured as an array of workstation objects:
+
+```json
+[
+  {
+    "workstation_id": "cengizs-MacBook-Pro",
+    "history": [
+      {
+        "day": "2025-10-22",
+        "absolutely": 4,
+        "right": 4,
+        "perfect": 47,
+        "excellent": 12,
+        "total_messages": 1057
+      },
+      ...
+    ]
+  },
+  ...
+]
+```
+
+**Benefits of this format:**
+- Human-readable (JSON)
+- Version controlled (Git)
+- Easy to inspect and verify
+- Can be edited manually if needed
+- Supports multiple workstations
+
+### Backup Best Practices
+
+1. **Before major changes**: Always create a fresh backup
+   ```bash
+   python3 scripts/backup_db.py
+   git commit -m "Backup before database migration"
+   ```
+
+2. **Test restores regularly**: Verify backups work
+   ```bash
+   # Test restore to local database
+   python3 scripts/restore_backup.py backups/database.json
+   ```
+
+3. **Keep git history**: Don't delete old backups from git
+   - Git preserves all backup versions
+   - Can rollback to any point in time
+   - Use `git log backups/database.json` to see history
+
+4. **Monitor backup automation**: Check that production backups are running
+   ```bash
+   # Check recent backup commits
+   git log --oneline backups/database.json | head -5
+
+   # Should show commits every 6 hours
+   ```
+
+---
+
 ## Contributing
 
 This is a personal fork, but feel free to:
