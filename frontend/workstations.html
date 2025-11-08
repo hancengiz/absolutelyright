@@ -133,7 +133,23 @@
   <footer>
     <p><a href="https://github.com/hancengiz/absolutelyright-claude-code" target="_blank">github.com/hancengiz/absolutelyright-claude-code</a> • forked from <a href="https://github.com/yoavf/absolutelyright" target="_blank">@yoavf</a></p>
   </footer>
-  <script src="https://unpkg.com/rough-viz@2.0.5/dist/roughviz.min.js"></script>
-  <script type="module" src="workstations.js"></script>
+  <script>
+    // Load libraries exactly like the main page does
+    const roughScript = document.createElement('script');
+    roughScript.src = 'https://unpkg.com/roughjs@4.5.2/bundled/rough.js';
+    roughScript.onload = () => {
+      // Then load roughViz library
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/rough-viz@2.0.5';
+      script.onload = () => {
+        // Load our workstations script after libraries are ready
+        const workstationsScript = document.createElement('script');
+        workstationsScript.src = 'workstations.js';
+        document.body.appendChild(workstationsScript);
+      };
+      document.head.appendChild(script);
+    };
+    document.head.appendChild(roughScript);
+  </script>
 </body>
 </html>

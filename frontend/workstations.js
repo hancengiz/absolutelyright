@@ -122,8 +122,11 @@ function processSelectedData() {
 
 // Update the chart
 function updateChart() {
+  console.log('updateChart() called');
   const chartContainer = document.getElementById('chart');
   const noDataMessage = document.getElementById('no-data-message');
+
+  console.log(`Selected workstations: ${Array.from(selectedWorkstations).join(', ')}`);
 
   if (selectedWorkstations.size === 0) {
     chartContainer.style.display = 'none';
@@ -135,6 +138,8 @@ function updateChart() {
   noDataMessage.style.display = 'none';
 
   const processedData = processSelectedData();
+  console.log(`Processed data length: ${processedData.length}`);
+
   if (processedData.length === 0) {
     chartContainer.innerHTML = '<p>No data available for selected workstations</p>';
     return;
@@ -201,7 +206,18 @@ function updateChart() {
 
   // Create the chart
   try {
-    new roughViz.Line({
+    // Check if roughViz is loaded
+    if (typeof roughViz === 'undefined') {
+      console.error('RoughViz library not loaded');
+      chartContainer.innerHTML = '<p>Error: Chart library not loaded. Please refresh the page.</p>';
+      return;
+    }
+
+    console.log(`Creating chart with ${datasets.length} datasets and ${labels.length} labels`);
+    console.log('First dataset sample:', datasets[0]);
+    console.log('Labels sample:', labels.slice(0, 5));
+
+    const chartConfig = {
       element: '#chart',
       data: {
         labels: labels,
@@ -223,10 +239,15 @@ function updateChart() {
       legend: false,  // We'll use our custom legend
       yLabel: 'Count',
       xLabel: 'Date'
-    });
+    };
+
+    console.log('Chart config:', chartConfig);
+    new roughViz.Line(chartConfig);
+    console.log('Chart created successfully');
   } catch (error) {
     console.error('Error creating chart:', error);
-    chartContainer.innerHTML = '<p>Error creating chart</p>';
+    console.error('Error stack:', error.stack);
+    chartContainer.innerHTML = '<p>Error creating chart: ' + error.message + '</p>';
   }
 }
 
@@ -298,10 +319,12 @@ function createPatternLegend() {
 
 // Initialize
 async function init() {
+  console.log('Initializing workstations page...');
   await loadPatternConfig();
 
   // Fetch data
   workstationData = await fetchWorkstationData();
+  console.log(`Fetched data for ${workstationData.length} workstations`);
 
   if (workstationData.length === 0) {
     document.getElementById('chart').innerHTML = '<p>No data available</p>';
@@ -328,9 +351,20 @@ async function init() {
     `Viewing data from <span class="highlight">${totalWorkstations}</span> workstation${totalWorkstations > 1 ? 's' : ''}`;
 }
 
+// Start when DOM is ready AND roughViz is loaded
+function waitForLibrariesAndInit() {
+  if (typeof roughViz !== 'undefined') {
+    // Libraries are loaded, proceed with init
+    init();
+  } else {
+    // Wait a bit and try again
+    setTimeout(waitForLibrariesAndInit, 100);
+  }
+}
+
 // Start when DOM is ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', waitForLibrariesAndInit);
 } else {
-  init();
+  waitForLibrariesAndInit();
 }
