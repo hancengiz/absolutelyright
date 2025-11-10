@@ -427,6 +427,22 @@
         "right": 3,
         "perfect": 48,
         "excellent": 5
+      },
+      {
+        "day": "2025-11-09",
+        "total_messages": 2948,
+        "absolutely": 15,
+        "right": 12,
+        "perfect": 178,
+        "excellent": 33
+      },
+      {
+        "day": "2025-11-10",
+        "total_messages": 121,
+        "absolutely": 3,
+        "right": 0,
+        "perfect": 11,
+        "excellent": 1
       }
     ]
   }
