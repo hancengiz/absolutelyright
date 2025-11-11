@@ -350,6 +350,14 @@
         "right": 0,
         "perfect": 29,
         "excellent": 4
+      },
+      {
+        "day": "2025-11-10",
+        "total_messages": 2196,
+        "absolutely": 17,
+        "right": 8,
+        "perfect": 198,
+        "excellent": 37
       }
     ]
   },
@@ -438,10 +446,10 @@
       },
       {
         "day": "2025-11-10",
-        "total_messages": 121,
+        "total_messages": 246,
         "absolutely": 3,
-        "right": 0,
-        "perfect": 11,
+        "right": 1,
+        "perfect": 27,
         "excellent": 1
       }
     ]
