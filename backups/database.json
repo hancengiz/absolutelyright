@@ -358,6 +358,22 @@
         "right": 8,
         "perfect": 198,
         "excellent": 37
+      },
+      {
+        "day": "2025-11-11",
+        "total_messages": 1679,
+        "absolutely": 6,
+        "right": 2,
+        "perfect": 139,
+        "excellent": 48
+      },
+      {
+        "day": "2025-11-12",
+        "total_messages": 68,
+        "absolutely": 1,
+        "right": 0,
+        "perfect": 12,
+        "excellent": 2
       }
     ]
   },
