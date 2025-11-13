@@ -7,7 +7,6 @@ import sys
 import os
 import threading
 import time
-from pathlib import Path
 
 # Add scripts to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -52,17 +51,17 @@ def main():
     print("=" * 60)
     print()
 
-    # Create threads for both watchers
+    # Create daemon threads for both watchers
     absolutely_thread = threading.Thread(
         target=run_absolutely_right_watcher,
         name="AbsolutelyRightWatcher",
-        daemon=False
+        daemon=True
     )
 
     prompt_words_thread = threading.Thread(
         target=run_prompt_words_watcher,
         name="PromptWordsWatcher",
-        daemon=False
+        daemon=True
     )
 
     # Start both threads
@@ -73,18 +72,16 @@ def main():
     print()
     print("Both watchers are now running. Press Ctrl+C to stop all.")
     print("-" * 60)
+    print()
 
     try:
-        # Wait for both threads to complete
-        absolutely_thread.join()
-        prompt_words_thread.join()
+        # Keep the main thread alive while daemon threads run
+        while True:
+            time.sleep(10)
     except KeyboardInterrupt:
         print()
         print("-" * 60)
         print("Stopping all watchers...")
-        # Threads will stop on KeyboardInterrupt
-        absolutely_thread.join(timeout=5)
-        prompt_words_thread.join(timeout=5)
         print("All watchers stopped.")
 
 
