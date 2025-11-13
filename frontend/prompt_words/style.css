@@ -35,3 +35,8 @@ h1 {
 .legend-item {
 	white-space: nowrap;
 }
+
+/* Hide roughViz default tooltips, keep our custom ones */
+[style*="position: absolute"][style*="opacity: 1"]:not(.custom-tooltip):not(.totals-tooltip) {
+	display: none !important;
+}
