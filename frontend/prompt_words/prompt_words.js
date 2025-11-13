@@ -190,17 +190,8 @@ async function fetchToday(animate = false) {
 			weekCountElement.style.display = "inline";
 		}
 
-		// Show subtitle word count from config (help)
-		const subtitleWord = DISPLAY_CONFIG?.subtitle?.show_word || "help";
-		const subtitleCount = data[subtitleWord] || 0;
-		const subtitleTemplate = DISPLAY_CONFIG?.subtitle?.text_template || `(asked for ${subtitleWord} {count} times)`;
-
-		if (subtitleCount > 0) {
-			secondaryCountElement.textContent = subtitleTemplate.replace('{count}', subtitleCount);
-			secondaryCountElement.style.display = "block";
-		} else {
-			secondaryCountElement.style.display = "none";
-		}
+		// Hide help line (backend still tracks it)
+		secondaryCountElement.style.display = "none";
 
 		// Show tertiary count (frustrated words: fuck, stupid, idiot, shit)
 		if (DISPLAY_CONFIG?.tertiary && tertiaryCountElement) {
