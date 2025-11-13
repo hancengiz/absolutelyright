@@ -33,25 +33,7 @@ async function loadDisplayConfig() {
 			activeWords['filtered'] = true;
 		}
 	} catch (error) {
-		console.error("Error loading display config:", error);
-		// Use defaults if config fails to load
-		DISPLAY_CONFIG = {
-			title: { primary_word: "please", show_this_week: true },
-			tertiary: {
-				show_words: ["fuck", "stupid", "idiot", "shit"],
-				text_template: "(got frustrated {count} times 😅)"
-			},
-			chart: {
-				tracked_words: ["please", "thanks", "fuck", "stupid", "idiot", "shit"],
-				labels: {
-					"please": "Please",
-					"thanks": "Thank you",
-					"filtered": "Frustrated 😅"
-				},
-				merge_into_filtered: ["fuck", "stupid", "idiot", "shit"],
-				colors: ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFA07A", "#E63946"]
-			}
-		};
+		throw error;
 	}
 }
 
