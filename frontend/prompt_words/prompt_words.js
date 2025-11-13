@@ -58,15 +58,24 @@ function generateLegend() {
 	if (!legendContainer || !DISPLAY_CONFIG) return;
 
 	// Build words list: tracked_words + "filtered" if in filtered mode
-	let words = [...(DISPLAY_CONFIG.chart?.tracked_words || [])];
+	let configWords = [...(DISPLAY_CONFIG.chart?.tracked_words || [])];
 	if (!showUnfiltered && DISPLAY_CONFIG.chart?.merge_into_filtered) {
 		// Remove words that will be merged, add "filtered" instead
-		words = words.filter(w => !DISPLAY_CONFIG.chart.merge_into_filtered.includes(w));
-		words.push('filtered');
+		configWords = configWords.filter(w => !DISPLAY_CONFIG.chart.merge_into_filtered.includes(w));
+		configWords.push('filtered');
 	}
 
 	const labels = DISPLAY_CONFIG.chart?.labels || {};
 	const colors = DISPLAY_CONFIG.chart?.colors || [];
+
+	// Sort words alphabetically by their labels to match chart order
+	const formatWordName = (name) => labels[name] || (name.charAt(0).toUpperCase() + name.slice(1));
+
+	const wordColorPairs = configWords.map((word, index) => ({
+		word,
+		label: formatWordName(word),
+		color: colors[index] || '#ccc'
+	})).sort((a, b) => a.label.localeCompare(b.label));
 
 	// Find and clone the "Total user messages" legend item to keep it at the end
 	const legendItems = legendContainer.querySelectorAll('.legend-item');
@@ -80,8 +89,8 @@ function generateLegend() {
 	// Clear the legend
 	legendContainer.innerHTML = '';
 
-	// Add legend items for each word
-	words.forEach((word, index) => {
+	// Add legend items for each word in sorted order
+	wordColorPairs.forEach(({word, label, color}) => {
 		const legendItem = document.createElement('span');
 		legendItem.className = 'legend-item';
 		legendItem.style.cursor = 'pointer';
@@ -93,9 +102,7 @@ function generateLegend() {
 
 		const legendColor = document.createElement('span');
 		legendColor.className = 'legend-color';
-		legendColor.style.background = colors[index] || '#ccc';
-
-		const label = labels[word] || (word.charAt(0).toUpperCase() + word.slice(1));
+		legendColor.style.background = color;
 
 		legendItem.appendChild(legendColor);
 		legendItem.appendChild(document.createTextNode(' ' + label));
@@ -120,7 +127,7 @@ function generateLegend() {
 		// Add double-click handler to select only this word
 		legendItem.addEventListener('dblclick', () => {
 			// Deselect all words
-			words.forEach(w => {
+			wordColorPairs.forEach(({word: w}) => {
 				activeWords[w] = false;
 			});
 
@@ -130,8 +137,8 @@ function generateLegend() {
 			// Update all legend items' visual states
 			const allLegendItems = legendContainer.querySelectorAll('.legend-item');
 			allLegendItems.forEach((item, idx) => {
-				if (idx < words.length) {
-					const itemWord = words[idx];
+				if (idx < wordColorPairs.length) {
+					const itemWord = wordColorPairs[idx].word;
 					if (activeWords[itemWord]) {
 						item.classList.remove('disabled');
 					} else {
@@ -425,7 +432,12 @@ function drawChart(history) {
 		addTotalUserMessagesLine(chartElement, displayHistory, isMobile, width, height, margin);
 
 		// Enhance tooltips to show word names (use sorted words for consistency)
-		enhanceTooltips(chartElement, displayHistory, sortedWordsToShow, configLabels);
+		// Also pass the color map for segment detection
+		const colorMap = {};
+		wordData.forEach(wd => {
+			colorMap[wd.color] = wd.word;
+		});
+		enhanceTooltips(chartElement, displayHistory, sortedWordsToShow, configLabels, colorMap);
 	}, 100);
 }
 
@@ -594,7 +606,7 @@ function addTotalUserMessagesLine(chartElement, displayHistory, isMobile, width,
 	});
 }
 
-function enhanceTooltips(chartElement, displayHistory, wordsToShow, labels) {
+function enhanceTooltips(chartElement, displayHistory, wordsToShow, labels, colorMap) {
 	const svg = chartElement.querySelector('svg');
 	if (!svg) return;
 
@@ -645,6 +657,22 @@ function enhanceTooltips(chartElement, displayHistory, wordsToShow, labels) {
 			el.style.cursor = 'pointer';
 
 			el.addEventListener('mouseenter', (e) => {
+				// Detect which word this bar segment represents by color
+				const fill = el.getAttribute('fill');
+				let hoveredWord = null;
+
+				// Try to match the fill color to our color map
+				if (fill && colorMap) {
+					// Normalize color for matching (handle rgb, rgba, hex)
+					for (const [color, word] of Object.entries(colorMap)) {
+						if (fill.toLowerCase().includes(color.toLowerCase().substring(1)) ||
+						    color.toLowerCase().includes(fill.toLowerCase().substring(1))) {
+							hoveredWord = word;
+							break;
+						}
+					}
+				}
+
 				// Build tooltip content with word breakdown
 				const date = new Date(dayData.day);
 				const dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -655,7 +683,10 @@ function enhanceTooltips(chartElement, displayHistory, wordsToShow, labels) {
 					const count = dayData[word] || 0;
 					const label = labels[word] || (word.charAt(0).toUpperCase() + word.slice(1));
 					if (count > 0) {
-						tooltipHTML += `<div style="margin: 0.25rem 0;"><b>${label}:</b> ${count}</div>`;
+						// Bold the word if it's the hovered segment
+						const isBold = word === hoveredWord;
+						const boldStyle = isBold ? 'font-weight: 900; color: #e63946;' : '';
+						tooltipHTML += `<div style="margin: 0.25rem 0; ${boldStyle}"><b>${label}:</b> ${count}</div>`;
 					}
 				});
 
