@@ -200,7 +200,9 @@ async function fetchToday(animate = false) {
 		}
 
 		// Hide help line (backend still tracks it)
-		secondaryCountElement.style.display = "none";
+		if (secondaryCountElement) {
+			secondaryCountElement.style.display = "none";
+		}
 
 		// Show tertiary count (frustrated words: fuck, stupid, idiot, shit)
 		if (DISPLAY_CONFIG?.tertiary && tertiaryCountElement) {
