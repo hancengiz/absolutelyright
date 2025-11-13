@@ -160,7 +160,7 @@ function getWeekStart(date) {
 
 async function fetchToday(animate = false) {
 	try {
-		const res = await fetch("/api/prompt-words/today");
+		const res = await fetch("/api/things-i-tell-claude/today");
 		const data = await res.json();
 		const countElement = document.getElementById("today-inline");
 		const subtitleElement = document.querySelector(".subtitle");
@@ -173,7 +173,7 @@ async function fetchToday(animate = false) {
 
 		// Calculate this week's count if enabled
 		if (DISPLAY_CONFIG?.title?.show_this_week && weekCountElement) {
-			const historyRes = await fetch("/api/prompt-words/history");
+			const historyRes = await fetch("/api/things-i-tell-claude/history");
 			const history = await historyRes.json();
 			const today = new Date().toISOString().split("T")[0];
 			const weekStart = getWeekStart(today);
@@ -258,7 +258,7 @@ function aggregateSensitiveWords(data) {
 
 async function fetchHistory() {
 	try {
-		const res = await fetch("/api/prompt-words/history");
+		const res = await fetch("/api/things-i-tell-claude/history");
 		let history = await res.json();
 
 		// Add today if it's not in the history
@@ -267,7 +267,7 @@ async function fetchHistory() {
 
 		if (!hasToday) {
 			// Fetch today's count to add to the chart
-			const todayRes = await fetch("/api/prompt-words/today");
+			const todayRes = await fetch("/api/things-i-tell-claude/today");
 			const todayData = await todayRes.json();
 
 			// Build today's entry with all words

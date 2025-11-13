@@ -32,7 +32,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Absolutely Right API", lifespan=lifespan)
 
 # Include prompt words router
-app.include_router(prompt_words_router, prefix="/api/prompt-words", tags=["prompt-words"])
+app.include_router(prompt_words_router, prefix="/api/things-i-tell-claude", tags=["things-i-tell-claude"])
 
 
 # Pydantic models for API
@@ -174,9 +174,9 @@ async def workstations_view():
     return FileResponse("frontend/workstations.html")
 
 
-@app.get("/prompt-words")
-async def prompt_words_view():
-    """Serve the prompt words dashboard page."""
+@app.get("/things-i-tell-claude")
+async def things_i_tell_claude_view():
+    """Serve the things I tell Claude dashboard page."""
     from fastapi.responses import FileResponse
     return FileResponse("frontend/prompt_words/index.html")
 
