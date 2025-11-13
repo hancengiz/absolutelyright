@@ -4,7 +4,6 @@
     "please": "\\bplease\\b",
     "thanks": "\\b(thanks|thank you|thx)\\b",
     "fuck": "\\b(fuck|fucking|fucked|fck)\\b",
-    "stupid": "\\b(stupid|dumb|idiotic?|moronic?)\\b",
     "idiot": "\\b(idiot|idiotic?)\\b"
   }
 }
