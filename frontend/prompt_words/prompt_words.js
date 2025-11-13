@@ -171,9 +171,9 @@ async function fetchToday(animate = false) {
 		const secondaryCountElement = document.getElementById("secondary-count");
 		const weekCountElement = document.getElementById("week-count");
 
-		// Get primary word from config
-		const primaryWord = DISPLAY_CONFIG?.title?.primary_word || "please";
-		const primaryCount = data[primaryWord] || 0;
+		// Sum all tracked words for the primary count
+		const trackedWords = DISPLAY_CONFIG?.chart?.tracked_words || [];
+		const primaryCount = trackedWords.reduce((sum, word) => sum + (data[word] || 0), 0);
 
 		// Calculate this week's count if enabled
 		if (DISPLAY_CONFIG?.title?.show_this_week && weekCountElement) {
@@ -182,9 +182,12 @@ async function fetchToday(animate = false) {
 			const today = new Date().toISOString().split("T")[0];
 			const weekStart = getWeekStart(today);
 
+			// Sum all tracked words for the week
 			const weekCount = history
 				.filter(d => d.day >= weekStart && d.day <= today)
-				.reduce((sum, d) => sum + (d[primaryWord] || 0), 0);
+				.reduce((sum, d) => {
+					return sum + trackedWords.reduce((wordSum, word) => wordSum + (d[word] || 0), 0);
+				}, 0);
 
 			weekCountElement.textContent = ` (${weekCount} this week)`;
 			weekCountElement.style.display = "inline";
