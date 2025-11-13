@@ -369,11 +369,11 @@
       },
       {
         "day": "2025-11-12",
-        "total_messages": 68,
-        "absolutely": 1,
-        "right": 0,
-        "perfect": 12,
-        "excellent": 2
+        "total_messages": 6706,
+        "absolutely": 55,
+        "right": 18,
+        "perfect": 348,
+        "excellent": 108
       }
     ]
   },
@@ -467,6 +467,14 @@
         "right": 1,
         "perfect": 27,
         "excellent": 1
+      },
+      {
+        "day": "2025-11-12",
+        "total_messages": 3,
+        "absolutely": 0,
+        "right": 0,
+        "perfect": 0,
+        "excellent": 0
       }
     ]
   }
