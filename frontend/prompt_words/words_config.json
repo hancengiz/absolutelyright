@@ -9,18 +9,18 @@
     "text_template": "(asked for help {count} times)"
   },
   "tertiary": {
-    "show_words": ["fuck", "stupid", "idiot", "shit"],
+    "show_words": ["fuck", "stupid", "idiot"],
     "text_template": "(got frustrated {count} times 😅)"
   },
   "chart": {
-    "tracked_words": ["please", "help", "thanks", "fuck", "stupid", "idiot", "shit"],
+    "tracked_words": ["please", "help", "thanks", "fuck", "stupid", "idiot"],
     "labels": {
       "please": "Please",
       "help": "Help me",
       "thanks": "Thank you",
       "filtered": "Frustrated 😅"
     },
-    "merge_into_filtered": ["fuck", "stupid", "idiot", "shit"],
+    "merge_into_filtered": ["fuck", "stupid", "idiot"],
     "colors": ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFA07A", "#E63946", "#DC143C", "#B22222", "#8B0000", "#800000", "#E63946"]
   }
 }
