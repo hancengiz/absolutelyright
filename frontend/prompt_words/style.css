@@ -37,6 +37,12 @@ h1 {
 }
 
 /* Hide roughViz default tooltips, keep our custom ones */
-[style*="position: absolute"][style*="opacity: 1"]:not(.custom-tooltip):not(.totals-tooltip) {
+/* Target any absolutely positioned element that isn't our custom tooltip */
+div[style*="position: absolute"]:not(.custom-tooltip):not(.totals-tooltip) {
+	display: none !important;
+}
+
+/* Also hide any element with data-rz-type (roughViz-specific) that isn't ours */
+[data-rz-type]:not(.custom-tooltip):not(.totals-tooltip) {
 	display: none !important;
 }
