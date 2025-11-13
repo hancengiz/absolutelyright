@@ -1,12 +1,16 @@
 {
   "title": {
     "primary_word": "please",
-    "text_template": "I said polite words {count} times today",
+    "text_template": "I said please {count} times today",
     "show_this_week": true
   },
   "subtitle": {
     "show_word": "help",
     "text_template": "(asked for help {count} times)"
+  },
+  "tertiary": {
+    "show_words": ["fuck", "stupid", "idiot", "shit"],
+    "text_template": "(got frustrated {count} times)"
   },
   "chart": {
     "tracked_words": ["please", "help", "thanks", "fuck", "stupid", "idiot", "shit"],

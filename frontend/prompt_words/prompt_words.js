@@ -170,10 +170,11 @@ async function fetchToday(animate = false) {
 		const subtitleElement = document.querySelector(".subtitle");
 		const secondaryCountElement = document.getElementById("secondary-count");
 		const weekCountElement = document.getElementById("week-count");
+		const tertiaryCountElement = document.getElementById("tertiary-count");
 
-		// Sum all tracked words for the primary count
-		const trackedWords = DISPLAY_CONFIG?.chart?.tracked_words || [];
-		const primaryCount = trackedWords.reduce((sum, word) => sum + (data[word] || 0), 0);
+		// Get primary word count (just "please")
+		const primaryWord = DISPLAY_CONFIG?.title?.primary_word || "please";
+		const primaryCount = data[primaryWord] || 0;
 
 		// Calculate this week's count if enabled
 		if (DISPLAY_CONFIG?.title?.show_this_week && weekCountElement) {
@@ -182,18 +183,15 @@ async function fetchToday(animate = false) {
 			const today = new Date().toISOString().split("T")[0];
 			const weekStart = getWeekStart(today);
 
-			// Sum all tracked words for the week
 			const weekCount = history
 				.filter(d => d.day >= weekStart && d.day <= today)
-				.reduce((sum, d) => {
-					return sum + trackedWords.reduce((wordSum, word) => wordSum + (d[word] || 0), 0);
-				}, 0);
+				.reduce((sum, d) => sum + (d[primaryWord] || 0), 0);
 
 			weekCountElement.textContent = ` (${weekCount} this week)`;
 			weekCountElement.style.display = "inline";
 		}
 
-		// Show subtitle word count from config
+		// Show subtitle word count from config (help)
 		const subtitleWord = DISPLAY_CONFIG?.subtitle?.show_word || "help";
 		const subtitleCount = data[subtitleWord] || 0;
 		const subtitleTemplate = DISPLAY_CONFIG?.subtitle?.text_template || `(asked for ${subtitleWord} {count} times)`;
@@ -203,6 +201,20 @@ async function fetchToday(animate = false) {
 			secondaryCountElement.style.display = "block";
 		} else {
 			secondaryCountElement.style.display = "none";
+		}
+
+		// Show tertiary count (frustrated words: fuck, stupid, idiot, shit)
+		if (DISPLAY_CONFIG?.tertiary && tertiaryCountElement) {
+			const tertiaryWords = DISPLAY_CONFIG.tertiary.show_words || [];
+			const tertiaryCount = tertiaryWords.reduce((sum, word) => sum + (data[word] || 0), 0);
+			const tertiaryTemplate = DISPLAY_CONFIG.tertiary.text_template || "(got frustrated {count} times)";
+
+			if (tertiaryCount > 0) {
+				tertiaryCountElement.textContent = tertiaryTemplate.replace('{count}', tertiaryCount);
+				tertiaryCountElement.style.display = "block";
+			} else {
+				tertiaryCountElement.style.display = "none";
+			}
 		}
 
 		if (animate && primaryCount > 0) {
