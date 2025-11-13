@@ -172,9 +172,8 @@ async function fetchToday(animate = false) {
 		const weekCountElement = document.getElementById("week-count");
 		const tertiaryCountElement = document.getElementById("tertiary-count");
 
-		// Get primary word count (just "please")
-		const primaryWord = DISPLAY_CONFIG?.title?.primary_word || "please";
-		const primaryCount = data[primaryWord] || 0;
+		// Get primary word count (sum of "please" + "thanks")
+		const primaryCount = (data.please || 0) + (data.thanks || 0);
 
 		// Calculate this week's count if enabled
 		if (DISPLAY_CONFIG?.title?.show_this_week && weekCountElement) {
@@ -185,7 +184,7 @@ async function fetchToday(animate = false) {
 
 			const weekCount = history
 				.filter(d => d.day >= weekStart && d.day <= today)
-				.reduce((sum, d) => sum + (d[primaryWord] || 0), 0);
+				.reduce((sum, d) => sum + (d.please || 0) + (d.thanks || 0), 0);
 
 			weekCountElement.textContent = ` (${weekCount} this week)`;
 			weekCountElement.style.display = "inline";
