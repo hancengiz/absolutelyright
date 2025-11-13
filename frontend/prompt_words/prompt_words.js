@@ -362,16 +362,25 @@ function drawChart(history) {
 	});
 	const wordsToShow = wordsWithData.length > 0 ? wordsWithData : activeWordsFiltered;
 
-	// Get colors only for words we're showing
-	const activeColors = wordsToShow.map(word => {
-		const index = configWords.indexOf(word);
-		return index >= 0 ? configColors[index] : '#ccc';
-	});
-
 	// Format word names using config labels
 	const formatWordName = (name) => {
 		return configLabels[name] || (name.charAt(0).toUpperCase() + name.slice(1));
 	};
+
+	// Create array of {word, label, color} and sort by label alphabetically
+	// This ensures colors match the order roughViz uses internally
+	const wordData = wordsToShow.map(word => {
+		const index = configWords.indexOf(word);
+		return {
+			word: word,
+			label: formatWordName(word),
+			color: index >= 0 ? configColors[index] : '#ccc'
+		};
+	}).sort((a, b) => a.label.localeCompare(b.label));
+
+	// Extract sorted words and colors
+	const sortedWordsToShow = wordData.map(wd => wd.word);
+	const activeColors = wordData.map(wd => wd.color);
 
 	// Prepare data in the format roughViz expects for stacked bars
 	const data = displayHistory.map((d) => {
@@ -382,8 +391,8 @@ function drawChart(history) {
 			: date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
 		const row = { date: label };
-		// Add each word that has data
-		wordsToShow.forEach(word => {
+		// Add each word in sorted order (by label) to match color order
+		sortedWordsToShow.forEach(word => {
 			row[formatWordName(word)] = d[word] || 0;
 		});
 		return row;
@@ -425,8 +434,8 @@ function drawChart(history) {
 		// Add total user messages line
 		addTotalUserMessagesLine(chartElement, displayHistory, isMobile, width, height, margin);
 
-		// Enhance tooltips to show word names
-		enhanceTooltips(chartElement, displayHistory, wordsToShow, configLabels);
+		// Enhance tooltips to show word names (use sorted words for consistency)
+		enhanceTooltips(chartElement, displayHistory, sortedWordsToShow, configLabels);
 	}, 100);
 }
 

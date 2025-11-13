@@ -10,7 +10,7 @@
   },
   "tertiary": {
     "show_words": ["fuck", "stupid", "idiot", "shit"],
-    "text_template": "(got frustrated {count} times)"
+    "text_template": "(got frustrated {count} times 😅)"
   },
   "chart": {
     "tracked_words": ["please", "help", "thanks", "fuck", "stupid", "idiot", "shit"],

@@ -19,8 +19,8 @@ h1 {
 .secondary-count, .tertiary-count {
 	font-size: clamp(0.9rem, 2vw, 1.1rem);
 	color: #6b7280;
-	margin-top: 0;
-	margin-bottom: 1.5rem;
+	margin-top: 0.25rem;
+	margin-bottom: 0.25rem;
 	font-weight: 400;
 	font-style: italic;
 }
