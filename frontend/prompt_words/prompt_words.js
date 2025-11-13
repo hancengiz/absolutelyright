@@ -37,29 +37,34 @@ async function loadDisplayConfig() {
 	}
 }
 
-function generateLegend() {
+function generateLegend(wordData = null) {
 	const legendContainer = document.getElementById("chart-legend");
 	if (!legendContainer || !DISPLAY_CONFIG) return;
 
-	// Build words list: tracked_words + "filtered" if in filtered mode
-	let configWords = [...(DISPLAY_CONFIG.chart?.tracked_words || [])];
-	if (!showUnfiltered && DISPLAY_CONFIG.chart?.merge_into_filtered) {
-		// Remove words that will be merged, add "filtered" instead
-		configWords = configWords.filter(w => !DISPLAY_CONFIG.chart.merge_into_filtered.includes(w));
-		configWords.push('filtered');
-	}
-
 	const labels = DISPLAY_CONFIG.chart?.labels || {};
-	const colors = DISPLAY_CONFIG.chart?.colors || [];
 
-	// Sort words alphabetically by their labels to match chart order
-	const formatWordName = (name) => labels[name] || (name.charAt(0).toUpperCase() + name.slice(1));
+	// If wordData is provided (from drawChart), use it; otherwise build from config
+	let wordColorPairs;
+	if (wordData) {
+		// Use the word data from drawChart - this ensures legend matches chart colors
+		wordColorPairs = wordData;
+	} else {
+		// Fallback: Build words list from config at startup
+		let configWords = [...(DISPLAY_CONFIG.chart?.tracked_words || [])];
+		if (!showUnfiltered && DISPLAY_CONFIG.chart?.merge_into_filtered) {
+			configWords = configWords.filter(w => !DISPLAY_CONFIG.chart.merge_into_filtered.includes(w));
+			configWords.push('filtered');
+		}
 
-	const wordColorPairs = configWords.map((word, index) => ({
-		word,
-		label: formatWordName(word),
-		color: colors[index] || '#ccc'
-	})).sort((a, b) => a.label.localeCompare(b.label));
+		const colors = DISPLAY_CONFIG.chart?.colors || [];
+		const formatWordName = (name) => labels[name] || (name.charAt(0).toUpperCase() + name.slice(1));
+
+		wordColorPairs = configWords.map((word, index) => ({
+			word,
+			label: formatWordName(word),
+			color: colors[index] || '#ccc'
+		})).sort((a, b) => a.label.localeCompare(b.label));
+	}
 
 	// Find and clone the "Total user messages" legend item to keep it at the end
 	const legendItems = legendContainer.querySelectorAll('.legend-item');
@@ -394,13 +399,15 @@ function drawChart(history) {
 		font: 'Gaegu',
 		xLabel: '',
 		yLabel: isMobile ? '' : 'Word Count',
-		interactive: true,
-		tooltipFontSize: '0.95rem',
+		interactive: false,
 		margin: margin,
 		axisFontSize: isMobile ? '10' : '12',
 		axisStrokeWidth: isMobile ? 1 : 1.5,
 		strokeWidth: isMobile ? 1.5 : 2,
 	});
+
+	// Update legend to match chart colors and words
+	generateLegend(wordData);
 
 	// Hide every other x-axis label to reduce crowding
 	setTimeout(() => {
