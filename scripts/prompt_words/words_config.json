@@ -1,0 +1,12 @@
+{
+  "server_url": "http://localhost:3003",
+  "tracked_words": {
+    "please": "\\bplease\\b",
+    "help": "\\b(help|assist|support)\\b",
+    "thanks": "\\b(thanks|thank you|thx)\\b",
+    "fuck": "\\b(fuck|fucking|fucked|fck)\\b",
+    "stupid": "\\b(stupid|dumb|idiotic?|moronic?)\\b",
+    "idiot": "\\b(idiot|idiotic?)\\b",
+    "shit": "\\b(shit|shitty|crap)\\b"
+  }
+}

@@ -13,6 +13,7 @@ from pydantic import BaseModel
 
 from src.database import init_db, get_session
 from src.models import DayCount
+from src.prompt_words.routes import router as prompt_words_router
 
 
 @asynccontextmanager
@@ -29,6 +30,9 @@ async def lifespan(app: FastAPI):
 
 # Initialize FastAPI app with lifespan
 app = FastAPI(title="Absolutely Right API", lifespan=lifespan)
+
+# Include prompt words router
+app.include_router(prompt_words_router, prefix="/api/prompt-words", tags=["prompt-words"])
 
 
 # Pydantic models for API
@@ -168,6 +172,13 @@ async def workstations_view():
     """Serve the workstations view page."""
     from fastapi.responses import FileResponse
     return FileResponse("frontend/workstations.html")
+
+
+@app.get("/prompt-words")
+async def prompt_words_view():
+    """Serve the prompt words dashboard page."""
+    from fastapi.responses import FileResponse
+    return FileResponse("frontend/prompt_words/index.html")
 
 
 @app.post("/api/set")

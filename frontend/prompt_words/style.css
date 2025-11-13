@@ -1,0 +1,37 @@
+/* Import main styles */
+@import url('/style.css');
+
+/* Override/extend specific styles for prompt words dashboard */
+.highlight::after {
+	background: linear-gradient(
+		105deg,
+		transparent 2%,
+		#4ECDC4 5%,
+		#4ECDC4 95%,
+		transparent 98%
+	);
+}
+
+h1 {
+	font-size: clamp(1.8rem, 5vw, 2.5rem);
+}
+
+.secondary-count {
+	font-size: clamp(0.9rem, 2vw, 1.1rem);
+	color: #6b7280;
+	margin-top: 0;
+	margin-bottom: 1.5rem;
+	font-weight: 400;
+	font-style: italic;
+}
+
+/* Fix legend overlap */
+.chart-legend {
+	flex-wrap: wrap !important;
+	gap: 0.5rem 1.5rem !important;
+	max-width: 100%;
+}
+
+.legend-item {
+	white-space: nowrap;
+}

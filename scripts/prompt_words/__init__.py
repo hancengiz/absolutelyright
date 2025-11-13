@@ -1,0 +1,1 @@
+"""Prompt words tracking scripts."""

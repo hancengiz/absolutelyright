@@ -41,8 +41,19 @@ async_session_maker = async_sessionmaker(
 Base = declarative_base()
 
 
+# Import models to register them with Base.metadata
+# This ensures tables are created when init_db() is called
+def _import_models():
+    """Import all models to ensure they're registered."""
+    from src.models import DayCount  # noqa: F401
+    from src.prompt_words.models import PromptWordCount  # noqa: F401
+
+
 async def init_db():
     """Initialize database tables."""
+    # Import models first to register them
+    _import_models()
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 

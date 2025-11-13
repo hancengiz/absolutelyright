@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Prompt Words Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/prompt_words/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="top-link">
+    <a href="/">← Claude's Tracker</a>
+  </div>
+  <main>
+    <div id="unfiltered-notice" style="display: none; background: #FFF3CD; border: 2px solid #FFC107; padding: 0.75rem; margin: 1rem auto; max-width: 600px; border-radius: 8px; text-align: center; font-family: 'Gaegu', cursive;">
+      <strong>🔓 Unfiltered Mode</strong> - Showing actual words. <a href="/prompt-words" style="color: #E63946; text-decoration: underline;">Switch to filtered view</a>
+    </div>
+    <div class="graph-container">
+      <h1>Words I Tell <span class="highlight">Claude</span></h1>
+      <p class="subtitle" style="opacity: 0">I said <span id="today-inline">0</span> words today<span id="week-count" style="display: none;"></span></p>
+      <p id="secondary-count" class="secondary-count"></p>
+
+      <section class="chart-section">
+        <div id="chart"></div>
+        <div class="chart-legend" id="chart-legend">
+          <!-- Legend items will be dynamically generated from config -->
+          <span class="legend-item">
+            <span class="legend-color" style="background: #6b7280; opacity: 0.7; border-style: dashed;"></span>
+            Total user messages
+            <span class="info-icon-wrapper">
+              <span class="info-icon">?</span>
+              <span class="info-tooltip">Total messages sent to Claude each day</span>
+            </span>
+          </span>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer>
+    <p><a href="https://github.com/hancengiz/absolutelyright-claude-code" target="_blank">github.com/hancengiz/absolutelyright-claude-code</a></p>
+  </footer>
+  <script type="module" src="/prompt_words/prompt_words.js"></script>
+</body>
+</html>
