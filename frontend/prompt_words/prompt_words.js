@@ -206,12 +206,9 @@ async function fetchToday(animate = false) {
 			const tertiaryCount = tertiaryWords.reduce((sum, word) => sum + (data[word] || 0), 0);
 			const tertiaryTemplate = DISPLAY_CONFIG.tertiary.text_template || "(got frustrated {count} times)";
 
-			if (tertiaryCount > 0) {
-				tertiaryCountElement.textContent = tertiaryTemplate.replace('{count}', tertiaryCount);
-				tertiaryCountElement.style.display = "block";
-			} else {
-				tertiaryCountElement.style.display = "none";
-			}
+			// Always show, even if count is 0
+			tertiaryCountElement.textContent = tertiaryTemplate.replace('{count}', tertiaryCount);
+			tertiaryCountElement.style.display = "block";
 		}
 
 		if (animate && primaryCount > 0) {
@@ -618,7 +615,7 @@ function enhanceTooltips(chartElement, displayHistory, wordsToShow, labels, colo
 	if (!customTooltip) {
 		customTooltip = document.createElement('div');
 		customTooltip.className = 'custom-tooltip';
-		customTooltip.style.cssText = 'position: absolute; padding: 0.75rem; font-size: 0.95rem; opacity: 0; pointer-events: none; font-family: Gaegu, cursive; z-index: 10000; background: white; border: 2px solid #333; border-radius: 6px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); transition: opacity 0.15s;';
+		customTooltip.style.cssText = 'position: absolute; padding: 0.75rem; font-size: 0.95rem; opacity: 0; pointer-events: none; font-family: Gaegu, cursive; z-index: 10000; background: white; border: 2px solid #333; border-radius: 6px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); transition: opacity 0.15s; min-width: 180px; white-space: nowrap;';
 		chartElement.appendChild(customTooltip);
 	}
 
