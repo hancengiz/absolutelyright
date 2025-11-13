@@ -640,20 +640,13 @@ function enhanceTooltips(chartElement, displayHistory, wordsToShow, labels, colo
 			el.style.cursor = 'pointer';
 
 			el.addEventListener('mouseenter', (e) => {
-				// Detect which word this bar segment represents by color
-				const fill = el.getAttribute('fill');
+				// Detect which word this bar segment represents by position in bar group
+				// Instead of color matching (which is unreliable), use the order of elements
+				const barIndex = bars.indexOf(el);
 				let hoveredWord = null;
 
-				// Try to match the fill color to our color map
-				if (fill && colorMap) {
-					// Normalize color for matching (handle rgb, rgba, hex)
-					for (const [color, word] of Object.entries(colorMap)) {
-						if (fill.toLowerCase().includes(color.toLowerCase().substring(1)) ||
-						    color.toLowerCase().includes(fill.toLowerCase().substring(1))) {
-							hoveredWord = word;
-							break;
-						}
-					}
+				if (barIndex >= 0 && barIndex < wordsToShow.length) {
+					hoveredWord = wordsToShow[barIndex];
 				}
 
 				// Build tooltip content with word breakdown
