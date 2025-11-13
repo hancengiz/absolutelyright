@@ -37,17 +37,19 @@ async function loadDisplayConfig() {
 		// Use defaults if config fails to load
 		DISPLAY_CONFIG = {
 			title: { primary_word: "please", show_this_week: true },
-			subtitle: { show_word: "help" },
+			tertiary: {
+				show_words: ["fuck", "stupid", "idiot", "shit"],
+				text_template: "(got frustrated {count} times 😅)"
+			},
 			chart: {
-				words: ["please", "help", "thanks", "fix", "filtered"],
+				tracked_words: ["please", "thanks", "fuck", "stupid", "idiot", "shit"],
 				labels: {
 					"please": "Please",
-					"help": "Help me",
 					"thanks": "Thank you",
-					"fix": "Fix this",
-					"filtered": "Frustrated"
+					"filtered": "Frustrated 😅"
 				},
-				colors: ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#E63946"]
+				merge_into_filtered: ["fuck", "stupid", "idiot", "shit"],
+				colors: ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFA07A", "#E63946"]
 			}
 		};
 	}
