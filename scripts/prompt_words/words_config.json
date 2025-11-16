@@ -1,5 +1,5 @@
 {
-  "server_url": "http://localhost:3003",
+  "server_url": "https://cc.cengizhan.com",
   "tracked_words": {
     "please": "\\bplease\\b",
     "thanks": "\\b(thanks|thank you|thx)\\b",

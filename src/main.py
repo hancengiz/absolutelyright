@@ -181,6 +181,14 @@ async def things_i_tell_claude_view():
     return FileResponse("frontend/prompt_words/index.html")
 
 
+@app.get("/prompt_words")
+@app.get("/prompt-words")
+async def redirect_prompt_words():
+    """Redirect old prompt_words URLs to new things-i-tell-claude URL."""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/things-i-tell-claude", status_code=301)
+
+
 @app.post("/api/set")
 async def set_day(
     payload: SetRequest,

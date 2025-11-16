@@ -49,6 +49,11 @@ def main():
     print("=" * 60)
     print("UNIFIED WATCHER - Running both trackers concurrently")
     print("=" * 60)
+
+    # Pass through command-line arguments to child watchers
+    # (e.g., --secret for authentication)
+    sys.argv[0] = "unified_watcher"  # Keep original command name for child processes
+
     print()
 
     # Create daemon threads for both watchers

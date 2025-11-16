@@ -124,7 +124,7 @@ def upload_to_api(api_url, secret, date_str, words_dict=None, total_user_message
             data["secret"] = secret
 
         req = urllib.request.Request(
-            f"{api_url}/api/prompt-words/set",
+            f"{api_url}/api/things-i-tell-claude/set",
             data=json.dumps(data).encode("utf-8"),
             headers={"Content-Type": "application/json"},
         )
