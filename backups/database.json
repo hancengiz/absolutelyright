@@ -377,11 +377,35 @@
       },
       {
         "day": "2025-11-13",
-        "total_messages": 333,
-        "absolutely": 2,
-        "right": 2,
-        "perfect": 15,
-        "excellent": 2
+        "total_messages": 3372,
+        "absolutely": 26,
+        "right": 13,
+        "perfect": 237,
+        "excellent": 43
+      },
+      {
+        "day": "2025-11-14",
+        "total_messages": 1909,
+        "absolutely": 16,
+        "right": 12,
+        "perfect": 136,
+        "excellent": 30
+      },
+      {
+        "day": "2025-11-15",
+        "total_messages": 2513,
+        "absolutely": 7,
+        "right": 3,
+        "perfect": 134,
+        "excellent": 21
+      },
+      {
+        "day": "2025-11-16",
+        "total_messages": 2249,
+        "absolutely": 10,
+        "right": 9,
+        "perfect": 132,
+        "excellent": 27
       }
     ]
   },
@@ -483,6 +507,16 @@
         "right": 0,
         "perfect": 0,
         "excellent": 0
+      }
+    ]
+  },
+  {
+    "workstation_id": "test",
+    "history": [
+      {
+        "day": "2025-11-16",
+        "total_messages": 0,
+        "absolutely": 1
       }
     ]
   }
