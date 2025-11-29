@@ -414,6 +414,22 @@
         "right": 23,
         "perfect": 4,
         "excellent": 1
+      },
+      {
+        "day": "2025-11-28",
+        "total_messages": 1961,
+        "absolutely": 0,
+        "right": 4,
+        "perfect": 3,
+        "excellent": 3
+      },
+      {
+        "day": "2025-11-29",
+        "total_messages": 55,
+        "absolutely": 0,
+        "right": 0,
+        "perfect": 0,
+        "excellent": 0
       }
     ]
   },
