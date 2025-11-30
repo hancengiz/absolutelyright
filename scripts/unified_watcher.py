@@ -8,17 +8,15 @@ import os
 import threading
 import time
 
-# Add scripts to path for imports
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "prompt_words"))
-
-
 def run_absolutely_right_watcher():
     """Run the absolutely right watcher in this thread"""
     try:
-        from watcher import main as absolutely_main
+        # Import from scripts directory
+        scripts_dir = os.path.dirname(os.path.abspath(__file__))
+        sys.path.insert(0, scripts_dir)
+        import watcher
         print("[ABSOLUTELY RIGHT WATCHER] Starting...")
-        absolutely_main()
+        watcher.main()
     except KeyboardInterrupt:
         print("[ABSOLUTELY RIGHT WATCHER] Stopped by user")
     except Exception as e:
@@ -33,9 +31,12 @@ def run_prompt_words_watcher():
         prompt_words_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "prompt_words")
         os.chdir(prompt_words_dir)
 
-        from watcher import main as prompt_words_main
+        # Clear path and add only prompt_words to avoid conflicts
+        if prompt_words_dir not in sys.path:
+            sys.path.insert(0, prompt_words_dir)
+        import watcher as prompt_watcher
         print("[PROMPT WORDS WATCHER] Starting...")
-        prompt_words_main()
+        prompt_watcher.main()
     except KeyboardInterrupt:
         print("[PROMPT WORDS WATCHER] Stopped by user")
     except Exception as e:
