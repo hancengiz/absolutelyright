@@ -425,11 +425,19 @@
       },
       {
         "day": "2025-11-29",
-        "total_messages": 55,
+        "total_messages": 2983,
+        "absolutely": 5,
+        "right": 21,
+        "perfect": 17,
+        "excellent": 6
+      },
+      {
+        "day": "2025-11-30",
+        "total_messages": 9,
         "absolutely": 0,
         "right": 0,
         "perfect": 0,
-        "excellent": 0
+        "excellent": 1
       }
     ]
   },
