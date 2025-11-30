@@ -11,9 +11,10 @@ import time
 def run_absolutely_right_watcher():
     """Run the absolutely right watcher in this thread"""
     try:
-        # Import from scripts directory
+        # Add scripts directory to path temporarily for this watcher's imports
         scripts_dir = os.path.dirname(os.path.abspath(__file__))
         sys.path.insert(0, scripts_dir)
+
         import watcher
         print("[ABSOLUTELY RIGHT WATCHER] Starting...")
         watcher.main()
@@ -21,20 +22,29 @@ def run_absolutely_right_watcher():
         print("[ABSOLUTELY RIGHT WATCHER] Stopped by user")
     except Exception as e:
         print(f"[ABSOLUTELY RIGHT WATCHER] Error: {e}")
+    finally:
+        # Clean up path
+        if scripts_dir in sys.path:
+            sys.path.remove(scripts_dir)
 
 
 def run_prompt_words_watcher():
     """Run the prompt words watcher in this thread"""
     try:
-        # Change to prompt_words directory for proper imports
+        # Load prompt words watcher as a unique module to avoid conflicts
+        scripts_dir = os.path.dirname(os.path.abspath(__file__))
+        prompt_words_dir = os.path.join(scripts_dir, "prompt_words")
+        prompt_watcher_path = os.path.join(prompt_words_dir, "watcher.py")
+
+        # Change to prompt_words directory for any relative paths they might use
         original_cwd = os.getcwd()
-        prompt_words_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "prompt_words")
         os.chdir(prompt_words_dir)
 
-        # Clear path and add only prompt_words to avoid conflicts
-        if prompt_words_dir not in sys.path:
-            sys.path.insert(0, prompt_words_dir)
-        import watcher as prompt_watcher
+        spec = importlib.util.spec_from_file_location("promptwords_watcher", prompt_watcher_path)
+        prompt_watcher = importlib.util.module_from_spec(spec)
+        sys.modules["promptwords_watcher"] = prompt_watcher
+        spec.loader.exec_module(prompt_watcher)
+
         print("[PROMPT WORDS WATCHER] Starting...")
         prompt_watcher.main()
     except KeyboardInterrupt:
@@ -72,8 +82,10 @@ def main():
 
     # Start both threads
     absolutely_thread.start()
-    time.sleep(0.5)  # Slight delay so output doesn't mix
-    prompt_words_thread.start()
+    # time.sleep(0.5)  # Slight delay so output doesn't mix
+    # TEMPORARILY DISABLED: prompt_words_thread causing duplicate uploads due to module import conflicts
+    # TODO: Fix by running in separate processes instead of threads
+    # prompt_words_thread.start()
 
     print()
     print("Both watchers are now running. Press Ctrl+C to stop all.")

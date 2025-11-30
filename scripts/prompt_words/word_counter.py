@@ -27,15 +27,21 @@ UPLOAD_LOG_FILE = LOG_DIR / "prompt_words_uploads.log"
 # Set up rotating logger for uploads
 upload_logger = logging.getLogger("prompt_words_uploads")
 upload_logger.setLevel(logging.INFO)
-upload_handler = TimedRotatingFileHandler(
-    UPLOAD_LOG_FILE,
-    when="midnight",
-    interval=1,
-    backupCount=7,  # Keep 7 days of logs
-    encoding="utf-8"
-)
-upload_handler.setFormatter(logging.Formatter('%(message)s'))
-upload_logger.addHandler(upload_handler)
+
+# Only add handler if it hasn't been added yet (prevents duplicates on re-import)
+if not upload_logger.handlers:
+    upload_handler = TimedRotatingFileHandler(
+        UPLOAD_LOG_FILE,
+        when="midnight",
+        interval=1,
+        backupCount=7,  # Keep 7 days of logs
+        encoding="utf-8"
+    )
+    upload_handler.setFormatter(logging.Formatter('%(message)s'))
+    upload_logger.addHandler(upload_handler)
+
+# Prevent propagation to root logger (avoids potential duplicate logging)
+upload_logger.propagate = False
 
 # Load word patterns and server URL from config
 CONFIG_FILE = SCRIPT_DIR / "words_config.json"
